@@ -1,0 +1,26 @@
+{
+  "name": "Black Knot - Ermittlungszentrale",
+  "short_name": "Black Knot",
+  "description": "Interaktiver Spionage- und Ermittlungs-Thriller als offlinefaehige PWA.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0c1118",
+  "theme_color": "#11161f",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["games", "education", "entertainment"],
+  "lang": "de"
+}
