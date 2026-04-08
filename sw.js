@@ -5,6 +5,7 @@ const CORE_FILES = [
   "./manifest.json",
   "./sw.js",
   "./src/app.js",
+  "./src/engine.js",
   "./src/data/case1.js",
   "./icons/icon-192.png",
   "./icons/icon-512.png"

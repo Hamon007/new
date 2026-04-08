@@ -4,10 +4,13 @@ Interaktiver Ermittlungs-/Spionage-Thriller als offlinefaehige Progressive Web A
 
 Aktueller Stand:
 - PWA-Grundsystem mit Manifest + Service Worker
-- Spielbarer Prototyp fuer Fall 1: "Die weisse Stunde"
-- Beweiswand mit Knoten und Verbindungslogik
-- Operative Entscheidungen mit Risiko-/Zeitdruck-Auswirkung
-- Fallabschluss mit Bewertung (belastbar, Teilaufloesung, Cold Case)
+- Datengetriebener Fall 1: "Die weisse Stunde"
+- Deterministische Runtime-Engine fuer:
+  - Flag-Prioritaeten
+  - Flag-Konfliktregeln
+  - reproduzierbare Ending-Priorisierung
+- Szenen-Flow mit Clue-Sicherung, Choice-Flags und Hypothesenstatus
+- Fallabschluss ueber regelbasierte Ending-Resolution
 
 ## Lokaler Start
 
@@ -28,6 +31,7 @@ black-knot-pwa/
 |- sw.js
 |- src/
 |  |- app.js
+|  |- engine.js
 |  |- data/
 |     |- case1.js
 |- icons/
@@ -43,3 +47,4 @@ black-knot-pwa/
 1. Fall 1 auf 4 Akte ausbauen (mehr Knoten, mehr Red Herrings, Schlussbericht tiefer).
 2. Datenmodell auf 12 Faelle erweitern (Fallpacks).
 3. Dossier-, Audio- und Kartenmodule als eigene Views auslagern.
+4. Entscheidungskosten (Zeit, Zugriff, politischer Druck) als zusaetzliche Determinismus-Variable einbauen.

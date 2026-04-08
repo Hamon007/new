@@ -1,284 +1,296 @@
 import { CASE_1 } from "./data/case1.js";
+import {
+  buildCaseIndex,
+  collectClue,
+  createInitialRuntime,
+  evaluateHypotheses,
+  hydrateRuntime,
+  openScene,
+  resolveEnding,
+  sceneProgress,
+  takeChoice
+} from "./engine.js";
 
-const STORAGE_KEY = "black_knot_case_01_state_v1";
-
-function initialState() {
-  return {
-    links: [],
-    analysis: [],
-    operationsDone: [],
-    reliability: 28,
-    pressure: 44,
-    risk: 21
-  };
-}
-
-let state = loadState() || initialState();
+const STORAGE_KEY = "black_knot_case_001_runtime_v2";
+const index = buildCaseIndex(CASE_1);
+let runtime = hydrateRuntime(CASE_1, loadState());
 
 const el = {
   briefingText: document.getElementById("briefingText"),
   briefingMeta: document.getElementById("briefingMeta"),
-  openQuestions: document.getElementById("openQuestions"),
-  metricReliability: document.getElementById("metricReliability"),
-  metricPressure: document.getElementById("metricPressure"),
-  metricRisk: document.getElementById("metricRisk"),
-  nodes: document.getElementById("nodes"),
-  fromNode: document.getElementById("fromNode"),
-  toNode: document.getElementById("toNode"),
-  linkType: document.getElementById("linkType"),
-  addLinkBtn: document.getElementById("addLinkBtn"),
-  links: document.getElementById("links"),
-  operations: document.getElementById("operations"),
-  timeline: document.getElementById("timeline"),
-  suspect: document.getElementById("suspect"),
-  confidence: document.getElementById("confidence"),
-  theory: document.getElementById("theory"),
-  solveBtn: document.getElementById("solveBtn"),
-  result: document.getElementById("result"),
-  analysis: document.getElementById("analysis"),
-  saveBtn: document.getElementById("saveBtn")
+  progressText: document.getElementById("progressText"),
+  metricScenes: document.getElementById("metricScenes"),
+  metricClues: document.getElementById("metricClues"),
+  metricFlags: document.getElementById("metricFlags"),
+  sceneSelect: document.getElementById("sceneSelect"),
+  enterSceneBtn: document.getElementById("enterSceneBtn"),
+  currentScene: document.getElementById("currentScene"),
+  sceneChoices: document.getElementById("sceneChoices"),
+  clues: document.getElementById("clues"),
+  hypotheses: document.getElementById("hypotheses"),
+  activeFlags: document.getElementById("activeFlags"),
+  endingBtn: document.getElementById("endingBtn"),
+  resetBtn: document.getElementById("resetBtn"),
+  saveBtn: document.getElementById("saveBtn"),
+  endingResult: document.getElementById("endingResult")
 };
 
-function renderBriefing() {
-  const b = CASE_1.briefing;
-  el.briefingText.innerHTML = [
-    `<p>${b.summary}</p>`,
-    `<p><strong>Ziel:</strong> ${b.objective}</p>`
-  ].join("");
+function findScene(sceneId) {
+  return CASE_1.scenes.find((scene) => scene.id === sceneId) || null;
+}
 
+function findLocation(locationId) {
+  return CASE_1.locations.find((loc) => loc.id === locationId) || null;
+}
+
+function findClue(clueId) {
+  return CASE_1.clues.find((clue) => clue.id === clueId) || null;
+}
+
+function usedChoice(sceneId, choiceId) {
+  return runtime.usedChoices.includes(`${sceneId}:${choiceId}`);
+}
+
+function hasFlag(flagId) {
+  return runtime.activeFlags.includes(flagId);
+}
+
+function renderBriefing() {
+  el.briefingText.innerHTML = `
+    <p>${CASE_1.coreTruth.short}</p>
+    <p><strong>Ton:</strong> ${CASE_1.tone.join(", ")}</p>
+    <p><strong>Narrative:</strong> ${CASE_1.styleGuide.narrativeMood}</p>
+  `;
   el.briefingMeta.innerHTML = "";
-  [CASE_1.title, `Falllaufzeit ${CASE_1.runtime}`, ...b.constraints].forEach((txt) => {
+  [
+    CASE_1.caseId,
+    CASE_1.title,
+    `Laufzeit ca. ${CASE_1.estimatedPlaytimeMin} Min`,
+    `Schwierigkeit ${CASE_1.difficulty}`
+  ].forEach((item) => {
     const chip = document.createElement("span");
     chip.className = "chip";
-    chip.textContent = txt;
+    chip.textContent = item;
     el.briefingMeta.appendChild(chip);
   });
 }
 
-function renderNodes() {
-  el.nodes.innerHTML = "";
-  CASE_1.nodes.forEach((node) => {
-    const card = document.createElement("article");
-    card.className = "node";
-    card.innerHTML = `
-      <div class="k">${node.type} | Vertrauen ${node.trust}</div>
-      <h3>${node.label}</h3>
-      <p>${node.detail}</p>
-      <p class="muted" style="margin-top:6px">${node.time} - ${node.source}</p>
-    `;
-    el.nodes.appendChild(card);
-  });
+function renderMetrics() {
+  const progress = sceneProgress(CASE_1, runtime);
+  el.metricScenes.textContent = `${progress.visited}/${progress.total}`;
+  el.metricClues.textContent = `${runtime.discoveredClues.length}/${CASE_1.clues.length}`;
+  el.metricFlags.textContent = `${runtime.activeFlags.length}`;
+  el.progressText.textContent = `${progress.total - progress.visited} Szenen offen, ${CASE_1.clues.length - runtime.discoveredClues.length} Hinweise ungesichert.`;
 }
 
-function setupLinkControls() {
-  CASE_1.nodes.forEach((node) => {
-    const a = document.createElement("option");
-    a.value = node.id;
-    a.textContent = node.label;
-    el.fromNode.appendChild(a);
-    const b = document.createElement("option");
-    b.value = node.id;
-    b.textContent = node.label;
-    el.toNode.appendChild(b);
+function renderSceneSelect() {
+  const previousValue = el.sceneSelect.value;
+  el.sceneSelect.innerHTML = "";
+  CASE_1.scenes.forEach((scene, idx) => {
+    const option = document.createElement("option");
+    const unlocked = !scene.requiredFlags || scene.requiredFlags.every((flag) => hasFlag(flag));
+    const prevVisited = idx === 0 || runtime.visitedScenes.includes(CASE_1.scenes[idx - 1].id);
+    if (!unlocked || !prevVisited) return;
+
+    option.value = scene.id;
+    option.textContent = `${scene.id} - ${scene.title}`;
+    el.sceneSelect.appendChild(option);
   });
 
-  CASE_1.linkTypes.forEach((type) => {
-    const o = document.createElement("option");
-    o.value = type;
-    o.textContent = type;
-    el.linkType.appendChild(o);
-  });
-
-  el.addLinkBtn.addEventListener("click", () => {
-    const from = el.fromNode.value;
-    const to = el.toNode.value;
-    const type = el.linkType.value;
-    if (!from || !to || !type || from === to) return;
-
-    const key = edgeKey(from, to, type);
-    if (state.links.some((link) => edgeKey(link.from, link.to, link.type) === key)) return;
-
-    state.links.push({ from, to, type });
-    state.reliability = clamp(state.reliability + 2, 0, 100);
-    state.pressure = clamp(state.pressure + 1, 0, 100);
-    persistAndRender();
-  });
+  if (runtime.currentSceneId) {
+    el.sceneSelect.value = runtime.currentSceneId;
+  }
+  if (!el.sceneSelect.value && previousValue) {
+    el.sceneSelect.value = previousValue;
+  }
+  if (!el.sceneSelect.value && el.sceneSelect.options.length > 0) {
+    el.sceneSelect.selectedIndex = el.sceneSelect.options.length - 1;
+  }
 }
 
-function renderLinks() {
-  el.links.innerHTML = "";
-  if (state.links.length === 0) {
-    el.links.innerHTML = `<div class="entry muted">Noch keine Verbindungen gesetzt.</div>`;
+function renderCurrentScene() {
+  const scene = findScene(runtime.currentSceneId);
+  if (!scene) {
+    el.currentScene.innerHTML = `<div class="entry">Keine Szene aktiv.</div>`;
+    el.sceneChoices.innerHTML = "";
     return;
   }
-  state.links.forEach((link, idx) => {
-    const from = nodeLabel(link.from);
-    const to = nodeLabel(link.to);
-    const entry = document.createElement("div");
-    entry.className = "entry";
-    entry.innerHTML = `<strong>${from}</strong> -[${link.type}]-> <strong>${to}</strong>`;
-    const del = document.createElement("button");
-    del.className = "secondary";
-    del.style.marginTop = "8px";
-    del.textContent = "Entfernen";
-    del.addEventListener("click", () => {
-      state.links.splice(idx, 1);
-      state.reliability = clamp(state.reliability - 1, 0, 100);
-      persistAndRender();
-    });
-    entry.appendChild(del);
-    el.links.appendChild(entry);
-  });
-}
 
-function renderOperations() {
-  el.operations.innerHTML = "";
-  CASE_1.operations.forEach((op) => {
-    const done = state.operationsDone.includes(op.id);
-    const btn = document.createElement("button");
-    btn.className = "op";
-    btn.disabled = done;
-    btn.textContent = done ? `${op.label} (ausgefuehrt)` : op.label;
-    btn.addEventListener("click", () => {
-      if (done) return;
-      state.operationsDone.push(op.id);
-      state.reliability = clamp(state.reliability + op.effect.reliability, 0, 100);
-      state.pressure = clamp(state.pressure + op.effect.pressure, 0, 100);
-      state.risk = clamp(state.risk + op.effect.risk, 0, 100);
-      state.analysis.unshift(op.unlockAnalysis);
-      persistAndRender();
-    });
-    el.operations.appendChild(btn);
-  });
-}
+  const location = findLocation(scene.locationId);
+  const intro = (scene.cinematicIntro || []).map((line) => `<p>${line}</p>`).join("");
+  const visitedTag = runtime.visitedScenes.includes(scene.id) ? "Wiedereinstieg" : "Neu";
+  el.currentScene.innerHTML = `
+    <div class="entry">
+      <strong>${scene.title}</strong><br>
+      <span class="muted">${visitedTag} | ${location ? location.name : "Unbekannter Ort"}</span>
+      ${intro}
+      <p><strong>Ziel:</strong> ${scene.objective || "Kein Zieltext hinterlegt."}</p>
+    </div>
+  `;
 
-function renderTimeline() {
-  el.timeline.innerHTML = "";
-  CASE_1.timeline.forEach((item) => {
-    const event = document.createElement("div");
-    event.className = "event";
-    event.innerHTML = `<strong>${item.time}</strong> ${item.text}`;
-    el.timeline.appendChild(event);
-  });
-}
-
-function setupVerdict() {
-  CASE_1.suspects.forEach((sus) => {
-    const o = document.createElement("option");
-    o.value = sus.id;
-    o.textContent = sus.name;
-    el.suspect.appendChild(o);
-  });
-
-  el.solveBtn.addEventListener("click", () => {
-    const confidence = Number(el.confidence.value || 0);
-    const chosen = el.suspect.value;
-    const theoryText = (el.theory.value || "").trim();
-    const score = evaluateCase(confidence, chosen, theoryText);
-
-    const grade =
-      score >= 85 ? "Belastbare Fallthese" :
-      score >= 60 ? "Teilaufloesung" :
-      "Cold Case";
-
-    el.result.hidden = false;
-    el.result.innerHTML = `
-      <strong>${grade}</strong><br>
-      Ergebniswert: ${score}/100<br>
-      Wahrheit: ${CASE_1.debriefTruth.summary}
+  el.sceneChoices.innerHTML = "";
+  (scene.choices || []).forEach((choice) => {
+    const card = document.createElement("div");
+    card.className = "entry";
+    const done = usedChoice(scene.id, choice.id);
+    const response = (choice.response || []).join(" ");
+    card.innerHTML = `
+      <strong>${choice.prompt}</strong>
+      <p class="muted">${response}</p>
     `;
-  });
 
-  el.saveBtn.addEventListener("click", () => {
-    saveState(state);
-    state.analysis.unshift("Manuelles Save angelegt.");
-    renderAnalysis();
-  });
-}
-
-function evaluateCase(confidence, chosenSuspect, theoryText) {
-  const matched = CASE_1.requiredLinks.filter((need) => hasMatchingLink(need)).length;
-  const linkScore = Math.round((matched / CASE_1.requiredLinks.length) * 50);
-
-  const suspectScore = chosenSuspect === CASE_1.debriefTruth.culprit ? 25 : 4;
-  const confidenceScore = confidence >= 60 && confidence <= 90 ? 10 : 4;
-  const theoryScore = theoryText.length >= 120 ? 15 : theoryText.length >= 45 ? 8 : 2;
-
-  return clamp(linkScore + suspectScore + confidenceScore + theoryScore, 0, 100);
-}
-
-function hasMatchingLink(need) {
-  return state.links.some((link) => {
-    const sameType = link.type === need.type;
-    const sameA = link.from === need.a && link.to === need.b;
-    const sameB = link.from === need.b && link.to === need.a;
-    return sameType && (sameA || sameB);
+    const button = document.createElement("button");
+    button.className = done ? "secondary" : "";
+    button.disabled = done;
+    button.textContent = done ? "Bereits gewaehlt" : "Auswaehlen";
+    button.addEventListener("click", () => {
+      runtime = takeChoice(CASE_1, index, runtime, scene.id, choice.id);
+      persistAndRender();
+    });
+    card.appendChild(button);
+    el.sceneChoices.appendChild(card);
   });
 }
 
-function renderAnalysis() {
-  el.analysis.innerHTML = "";
+function renderClues() {
+  el.clues.innerHTML = "";
+  const availableSorted = [...runtime.availableClues].sort();
+  if (availableSorted.length === 0) {
+    el.clues.innerHTML = `<div class="entry muted">Noch keine Hinweise verfuegbar.</div>`;
+    return;
+  }
 
-  CASE_1.requiredLinks
-    .filter((need) => !hasMatchingLink(need))
-    .forEach((need) => {
-      const miss = document.createElement("div");
-      miss.className = "entry";
-      miss.textContent = `Fehlende Kernverbindung: ${need.hint}`;
-      el.analysis.appendChild(miss);
+  availableSorted.forEach((clueId) => {
+    const clue = findClue(clueId);
+    if (!clue) return;
+    const discovered = runtime.discoveredClues.includes(clueId);
+    const card = document.createElement("div");
+    card.className = "entry";
+    card.innerHTML = `
+      <strong>${clue.id} - ${clue.title}</strong>
+      <p>${clue.text}</p>
+      <p class="muted">Pflicht: ${clue.mandatory ? "Ja" : "Nein"} | Flags: ${(clue.revealsFlags || []).join(", ")}</p>
+    `;
+
+    const button = document.createElement("button");
+    button.className = discovered ? "secondary" : "";
+    button.disabled = discovered;
+    button.textContent = discovered ? "Gesichert" : "Hinweis sichern";
+    button.addEventListener("click", () => {
+      runtime = collectClue(CASE_1, index, runtime, clueId);
+      persistAndRender();
     });
 
-  state.analysis.forEach((line) => {
-    const info = document.createElement("div");
-    info.className = "entry";
-    info.textContent = line;
-    el.analysis.appendChild(info);
+    card.appendChild(button);
+    el.clues.appendChild(card);
   });
+}
 
-  if (el.analysis.children.length === 0) {
-    el.analysis.innerHTML = `<div class="entry muted">Noch keine Hinweise gesammelt.</div>`;
+function renderHypotheses() {
+  el.hypotheses.innerHTML = "";
+  const list = evaluateHypotheses(CASE_1, runtime);
+  list.forEach((hyp) => {
+    const item = document.createElement("div");
+    item.className = "entry";
+    item.innerHTML = `
+      <strong>${hyp.title}</strong>
+      <p>${hyp.summary}</p>
+      <p class="muted">Status: ${hyp.status} | Required ${hyp.requiredHits}/${hyp.requiredTotal} | Widersprueche ${hyp.contradictedHits}</p>
+    `;
+    el.hypotheses.appendChild(item);
+  });
+}
+
+function renderFlags() {
+  el.activeFlags.innerHTML = "";
+  if (runtime.activeFlags.length === 0) {
+    el.activeFlags.innerHTML = `<div class="entry muted">Noch keine aktiven Flags.</div>`;
+    return;
   }
+  runtime.activeFlags.forEach((flagId) => {
+    const meta = CASE_1.flags.find((flag) => flag.id === flagId);
+    const row = document.createElement("div");
+    row.className = "entry";
+    row.textContent = `${flagId} [${meta?.category || "state"}]`;
+    el.activeFlags.appendChild(row);
+  });
 }
 
-function renderMetrics() {
-  el.metricReliability.textContent = `${state.reliability}%`;
-  el.metricPressure.textContent = `${state.pressure}%`;
-  el.metricRisk.textContent = `${state.risk}%`;
+function enterSelectedScene() {
+  const sceneId = el.sceneSelect.value;
+  if (!sceneId) return;
+  runtime = openScene(CASE_1, index, runtime, sceneId);
+  persistAndRender();
 }
 
-function renderQuestions() {
-  const missing = CASE_1.requiredLinks.filter((need) => !hasMatchingLink(need)).length;
-  el.openQuestions.textContent =
-    missing === 0
-      ? "Alle Kernwidersprueche sind verbunden. Fallthese kann belastbar eingereicht werden."
-      : `${missing} Kernverbindungen fehlen noch. Achte auf Zeitversatz, Tunnelzugriff und Funksignal.`;
+function evaluateCaseEnding() {
+  const ending = resolveEnding(CASE_1, runtime);
+  if (!ending) {
+    el.endingResult.hidden = false;
+    el.endingResult.textContent = "Kein Ending konnte bestimmt werden.";
+    return;
+  }
+
+  let next = runtime;
+  if (Array.isArray(ending.rewardFlags) && ending.rewardFlags.length > 0) {
+    next = ending.rewardFlags.reduce((acc, flagId) => {
+      if (acc.activeFlags.includes(flagId)) return acc;
+      return {
+        ...acc,
+        activeFlags: [...acc.activeFlags, flagId].sort()
+      };
+    }, runtime);
+    runtime = next;
+  }
+
+  const hintUnlocked = ending.id === CASE_1.staffelHint.revealedByEnding && hasFlag("staffel_cutpoint_hint");
+  const hintText = hintUnlocked ? `<br>${CASE_1.staffelHint.text}` : "";
+
+  el.endingResult.hidden = false;
+  el.endingResult.innerHTML = `
+    <strong>${ending.id} - ${ending.title}</strong><br>
+    ${ending.postText || "Kein Nachtext hinterlegt."}
+    ${hintText}
+  `;
+  saveState(runtime);
+  renderFlags();
 }
 
-function persistAndRender() {
-  saveState(state);
+function resetProgress() {
+  runtime = createInitialRuntime(CASE_1);
+  runtime = openScene(CASE_1, index, runtime, runtime.currentSceneId);
+  saveState(runtime);
+  el.endingResult.hidden = true;
   renderAll();
 }
 
+function saveManual() {
+  saveState(runtime);
+  const now = new Date();
+  el.endingResult.hidden = false;
+  el.endingResult.textContent = `Stand gespeichert: ${now.toLocaleString("de-DE")}`;
+}
+
+function bindEvents() {
+  el.enterSceneBtn.addEventListener("click", enterSelectedScene);
+  el.sceneSelect.addEventListener("change", () => {
+    runtime.currentSceneId = el.sceneSelect.value;
+    saveState(runtime);
+    renderCurrentScene();
+  });
+  el.endingBtn.addEventListener("click", evaluateCaseEnding);
+  el.resetBtn.addEventListener("click", resetProgress);
+  el.saveBtn.addEventListener("click", saveManual);
+}
+
 function renderAll() {
+  renderBriefing();
   renderMetrics();
-  renderQuestions();
-  renderLinks();
-  renderOperations();
-  renderAnalysis();
-}
-
-function nodeLabel(id) {
-  const n = CASE_1.nodes.find((x) => x.id === id);
-  return n ? n.label : id;
-}
-
-function edgeKey(a, b, type) {
-  const sorted = [a, b].sort();
-  return `${sorted[0]}::${type}::${sorted[1]}`;
-}
-
-function clamp(n, min, max) {
-  return Math.max(min, Math.min(max, n));
+  renderSceneSelect();
+  renderCurrentScene();
+  renderClues();
+  renderHypotheses();
+  renderFlags();
 }
 
 function saveState(data) {
@@ -294,20 +306,22 @@ function loadState() {
   }
 }
 
-function registerSW() {
+function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("./sw.js").catch(() => {});
   }
 }
 
 function bootstrap() {
-  renderBriefing();
-  renderNodes();
-  setupLinkControls();
-  renderTimeline();
-  setupVerdict();
+  if (!runtime.currentSceneId) {
+    runtime = createInitialRuntime(CASE_1);
+  }
+  if (!runtime.visitedScenes.includes(runtime.currentSceneId)) {
+    runtime = openScene(CASE_1, index, runtime, runtime.currentSceneId);
+  }
+  bindEvents();
   renderAll();
-  registerSW();
+  registerServiceWorker();
 }
 
 bootstrap();
