@@ -1,278 +1,1862 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="de">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Black Knot - Ermittlungszentrale</title>
-  <meta name="description" content="Interaktiver Ermittlungs-Thriller als offlinefaehige PWA.">
-  <meta name="theme-color" content="#11161f">
-  <link rel="manifest" href="./manifest.json">
-  <style>
-    :root {
-      --bg-0: #0c1118;
-      --bg-1: #111826;
-      --panel: rgba(16, 23, 33, 0.92);
-      --line: #2f3f59;
-      --text: #e8edf6;
-      --muted: #a8b4c9;
-      --accent: #7ac1ff;
-      --accent-2: #8ad7cb;
-      --shadow: 0 16px 36px rgba(2, 7, 13, 0.46);
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0b0e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="SHADOWCASE">
+<link rel="manifest" href="manifest.json">
+<title>SHADOWCASE — Abteilung VII</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;500;600;700&family=Barlow:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #0a0b0e;
+    --bg2:       #0f1117;
+    --bg3:       #161922;
+    --border:    #1e2330;
+    --border2:   #2a3040;
+    --dim:       #3a4255;
+    --muted:     #606880;
+    --text:      #c8cdd8;
+    --text-hi:   #e8edf5;
+    --accent:    #c8a96e;
+    --accent2:   #8fafd4;
+    --red:       #c0444a;
+    --green:     #4a9e6e;
+    --yellow:    #d4a84b;
+    --purple:    #8b6faf;
+    --mono:      'Share Tech Mono', monospace;
+    --cond:      'Barlow Condensed', sans-serif;
+    --body:      'Barlow', sans-serif;
+    --trust-A:   #4ade80;
+    --trust-B:   #a3e635;
+    --trust-C:   #facc15;
+    --trust-D:   #fb923c;
+    --trust-E:   #f87171;
+    --trust-F:   #9f1239;
+  }
 
-    * { box-sizing: border-box; }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-    body {
-      margin: 0;
-      min-height: 100dvh;
-      color: var(--text);
-      font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
-      background:
-        radial-gradient(1200px 700px at 90% -10%, rgba(63, 124, 186, 0.24), transparent),
-        radial-gradient(1000px 700px at -10% 120%, rgba(80, 146, 128, 0.18), transparent),
-        linear-gradient(130deg, var(--bg-0), var(--bg-1) 52%, #0a0f17);
-    }
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
 
-    .shell {
-      max-width: 1240px;
-      margin: 0 auto;
-      padding: 18px;
-      display: grid;
-      gap: 14px;
-    }
+  /* ── SCAN-LINES OVERLAY ─────────────────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 2px,
+      rgba(0,0,0,0.08) 2px,
+      rgba(0,0,0,0.08) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
 
-    .header {
-      padding: 18px;
-      border: 1px solid var(--line);
-      border-radius: 18px;
-      background: linear-gradient(120deg, rgba(22, 31, 45, 0.95), rgba(12, 17, 26, 0.95));
-      box-shadow: var(--shadow);
-    }
+  /* ── MAIN LAYOUT ────────────────────────────────────────────────── */
+  #app {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+  }
 
-    .title {
-      margin: 0;
-      font-size: clamp(1.2rem, 3vw, 1.8rem);
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-      font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
-    }
+  /* ── TOP BAR ────────────────────────────────────────────────────── */
+  #topbar {
+    flex-shrink: 0;
+    height: 44px;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    gap: 16px;
+    position: relative;
+  }
+  #topbar .logo {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  #topbar .case-label {
+    font-family: var(--cond);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--text-hi);
+    text-transform: uppercase;
+    flex: 1;
+  }
+  #phase-indicator {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    padding: 3px 8px;
+    border: 1px solid;
+    border-radius: 2px;
+  }
+  #phase-indicator.phase-0 { border-color: var(--accent2); color: var(--accent2); }
+  #phase-indicator.phase-1 { border-color: var(--green);   color: var(--green); }
+  #phase-indicator.phase-2 { border-color: var(--yellow);  color: var(--yellow); }
+  #phase-indicator.phase-3 { border-color: var(--red);     color: var(--red); animation: blink 1.5s infinite; }
+  #phase-indicator.phase-4 { border-color: var(--accent);  color: var(--accent); }
 
-    .subtitle {
-      margin: 8px 0 0;
-      color: var(--muted);
-      font-size: 0.95rem;
-    }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
 
-    .grid {
-      display: grid;
-      grid-template-columns: 1.2fr 0.8fr;
-      gap: 14px;
-    }
+  /* ── NAV TABS ───────────────────────────────────────────────────── */
+  #nav {
+    flex-shrink: 0;
+    display: flex;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  #nav::-webkit-scrollbar { display: none; }
+  .nav-tab {
+    flex-shrink: 0;
+    padding: 0 16px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--cond);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .nav-tab:hover { color: var(--text); }
+  .nav-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .nav-tab .badge {
+    width: 6px; height: 6px;
+    background: var(--red);
+    border-radius: 50%;
+    display: none;
+  }
+  .nav-tab.has-update .badge { display: block; animation: blink 1s infinite; }
 
-    .panel {
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: var(--panel);
-      padding: 14px;
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(2px);
-    }
+  /* ── MAIN CONTENT ───────────────────────────────────────────────── */
+  #content {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+  }
 
-    .panel h2 {
-      margin: 0 0 10px;
-      font-size: 0.92rem;
-      text-transform: uppercase;
-      letter-spacing: 0.09em;
-      color: var(--accent-2);
-    }
+  .panel {
+    position: absolute;
+    inset: 0;
+    overflow-y: auto;
+    display: none;
+    padding: 20px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+  .panel.active { display: block; }
+  .panel::-webkit-scrollbar { width: 4px; }
+  .panel::-webkit-scrollbar-track { background: transparent; }
+  .panel::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-    .meta {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      margin-top: 10px;
-    }
+  /* ── PANEL: BRIEFING ────────────────────────────────────────────── */
+  #panel-briefing {
+    display: none;
+    flex-direction: column;
+    gap: 20px;
+    padding: 20px;
+  }
+  #panel-briefing.active { display: flex; }
 
-    .chip {
-      font-size: 0.78rem;
-      border: 1px solid var(--line);
-      padding: 4px 8px;
-      border-radius: 999px;
-      color: var(--muted);
-      background: rgba(12, 17, 26, 0.8);
-    }
+  .briefing-header {
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    padding: 20px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .briefing-header::before {
+    content: 'VERTRAULICH';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(-15deg);
+    font-family: var(--cond);
+    font-size: 72px;
+    font-weight: 700;
+    color: var(--red);
+    opacity: 0.05;
+    letter-spacing: 0.1em;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+  .briefing-header h1 {
+    font-family: var(--cond);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text-hi);
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .briefing-header .subtitle {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--accent);
+    margin-top: 4px;
+    letter-spacing: 0.15em;
+  }
+  .briefing-meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 2px;
+    margin-top: 16px;
+  }
+  .meta-item {
+    background: var(--bg);
+    padding: 8px 12px;
+  }
+  .meta-item .k {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .meta-item .v {
+    font-family: var(--cond);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-hi);
+    margin-top: 2px;
+  }
 
-    .status {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-      margin-top: 10px;
-    }
+  .briefing-text {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    font-size: 14px;
+    line-height: 1.8;
+    color: var(--text);
+    font-family: var(--body);
+  }
+  .briefing-text strong { color: var(--text-hi); font-weight: 600; }
 
-    .metric {
-      padding: 9px;
-      border-radius: 8px;
-      border: 1px solid var(--line);
-      background: rgba(13, 20, 31, 0.8);
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
+  /* ── PANEL: BEWEISWAND ──────────────────────────────────────────── */
+  #panel-wall {
+    padding: 0;
+    overflow: hidden;
+  }
+  #wall-canvas-wrap {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(200,169,110,0.03) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, rgba(143,175,212,0.03) 0%, transparent 50%),
+      var(--bg);
+  }
+  #wall-canvas-wrap.dragging { cursor: grabbing; }
 
-    .metric b {
-      display: block;
-      color: var(--text);
-      font-size: 1rem;
-      margin-top: 2px;
-    }
+  #wall-canvas {
+    position: absolute;
+    top: 0; left: 0;
+  }
 
-    .controls {
-      display: grid;
-      grid-template-columns: 1fr auto;
-      gap: 8px;
-      margin-bottom: 10px;
-    }
+  /* Node DOM elements */
+  .wall-node {
+    position: absolute;
+    background: var(--bg3);
+    border: 1px solid var(--border2);
+    border-radius: 3px;
+    padding: 8px 12px;
+    min-width: 120px;
+    max-width: 180px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.1s;
+    user-select: none;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.5);
+  }
+  .wall-node:hover { border-color: var(--dim); transform: translateY(-1px); }
+  .wall-node.selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent), 0 2px 12px rgba(200,169,110,0.2); }
+  .wall-node.type-person   { border-left: 3px solid var(--accent2); }
+  .wall-node.type-location { border-left: 3px solid var(--green); }
+  .wall-node.type-object   { border-left: 3px solid var(--yellow); }
+  .wall-node.type-document { border-left: 3px solid var(--accent); }
+  .wall-node.type-event    { border-left: 3px solid var(--purple); }
+  .wall-node.type-statement{ border-left: 3px solid var(--muted); }
+  .wall-node .node-type {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .wall-node .node-label {
+    font-family: var(--cond);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-hi);
+    line-height: 1.2;
+  }
+  .wall-node .node-trust {
+    font-family: var(--mono);
+    font-size: 9px;
+    margin-top: 4px;
+  }
+  .wall-node .node-trust.A { color: var(--trust-A); }
+  .wall-node .node-trust.B { color: var(--trust-B); }
+  .wall-node .node-trust.C { color: var(--trust-C); }
+  .wall-node .node-trust.D { color: var(--trust-D); }
+  .wall-node .node-trust.E { color: var(--trust-E); }
+  .wall-node .node-trust.F { color: var(--trust-F); }
 
-    select, button {
-      width: 100%;
-      border-radius: 9px;
-      border: 1px solid var(--line);
-      background: #101725;
-      color: var(--text);
-      padding: 9px 10px;
-      font-family: inherit;
-      font-size: 0.86rem;
-    }
+  /* Wall toolbar */
+  #wall-toolbar {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    z-index: 10;
+  }
+  .wall-btn {
+    width: 36px; height: 36px;
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.15s;
+    border-radius: 2px;
+  }
+  .wall-btn:hover { color: var(--text-hi); border-color: var(--dim); }
+  .wall-btn.active-link { border-color: var(--accent); color: var(--accent); }
 
-    button {
-      cursor: pointer;
-      border: 0;
-      font-weight: 600;
-      background: linear-gradient(120deg, #2c5f92, #2a7a71);
-    }
+  /* Link-type selector */
+  #link-type-selector {
+    position: absolute;
+    bottom: 16px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    padding: 8px 12px;
+    display: none;
+    gap: 8px;
+    align-items: center;
+    z-index: 20;
+    border-radius: 2px;
+    flex-wrap: wrap;
+    max-width: 90vw;
+  }
+  #link-type-selector.visible { display: flex; }
+  #link-type-selector label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+  .link-type-btn {
+    padding: 4px 10px;
+    font-family: var(--cond);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 2px;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+  }
+  .link-type-btn:hover { filter: brightness(1.3); border-color: currentColor; }
+  .link-type-btn.selected { border-color: currentColor; }
 
-    button.secondary {
-      background: #162034;
-      border: 1px solid var(--line);
-      font-weight: 500;
-    }
+  /* ── NODE DETAIL PANEL ──────────────────────────────────────────── */
+  #node-detail {
+    position: absolute;
+    top: 0; right: 0;
+    width: 320px;
+    height: 100%;
+    background: var(--bg2);
+    border-left: 1px solid var(--border);
+    transform: translateX(100%);
+    transition: transform 0.2s;
+    overflow-y: auto;
+    z-index: 15;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border2) transparent;
+  }
+  #node-detail.open { transform: translateX(0); }
+  #node-detail-inner { padding: 20px; }
+  #node-detail-close {
+    position: absolute;
+    top: 12px; right: 12px;
+    width: 28px; height: 28px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 2px;
+  }
+  #node-detail-close:hover { color: var(--text-hi); border-color: var(--dim); }
 
-    .list {
-      display: grid;
-      gap: 8px;
-      max-height: 330px;
-      overflow: auto;
-      padding-right: 2px;
-    }
+  .detail-type {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .detail-title {
+    font-family: var(--cond);
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text-hi);
+    text-transform: uppercase;
+    line-height: 1.1;
+    margin-bottom: 12px;
+    padding-right: 36px;
+  }
+  .detail-trust {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px;
+    border: 1px solid;
+    border-radius: 2px;
+    font-family: var(--mono);
+    font-size: 10px;
+    margin-bottom: 16px;
+  }
+  .detail-desc {
+    font-size: 13px;
+    line-height: 1.75;
+    color: var(--text);
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    margin-bottom: 16px;
+  }
 
-    .entry {
-      border: 1px solid var(--line);
-      border-radius: 9px;
-      padding: 9px;
-      background: rgba(10, 15, 22, 0.86);
-      font-size: 0.84rem;
-      line-height: 1.4;
-    }
+  .connections-list { margin-top: 16px; }
+  .connections-list h3 {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .conn-item {
+    padding: 8px 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    margin-bottom: 4px;
+    cursor: pointer;
+    transition: border-color 0.15s;
+    border-radius: 2px;
+  }
+  .conn-item:hover { border-color: var(--dim); }
+  .conn-item .conn-type {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+  .conn-item .conn-target {
+    font-family: var(--cond);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-hi);
+  }
+  .conn-item .conn-note {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .conn-item .link-btn {
+    margin-top: 6px;
+    padding: 4px 10px;
+    font-family: var(--mono);
+    font-size: 10px;
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--accent);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+    display: block;
+  }
+  .conn-item .link-btn:hover { background: rgba(200,169,110,0.1); }
+  .conn-item .link-btn.linked { color: var(--green); border-color: var(--green); }
 
-    .entry p {
-      margin: 6px 0;
-      color: var(--muted);
-    }
+  /* ── PANEL: DOSSIER (FLAGS/HYPOTHESEN) ──────────────────────────── */
+  .section-head {
+    font-family: var(--cond);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .section-head::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
 
-    .stack {
-      display: grid;
-      gap: 8px;
-    }
+  .flag-grid {
+    display: grid;
+    gap: 4px;
+    margin-bottom: 24px;
+  }
+  .flag-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+  }
+  .flag-item.priority-5 { border-left: 3px solid var(--red); }
+  .flag-item.priority-4 { border-left: 3px solid var(--yellow); }
+  .flag-item.priority-3 { border-left: 3px solid var(--green); }
+  .flag-item.priority-2 { border-left: 3px solid var(--dim); }
+  .flag-item.priority-1 { border-left: 3px solid var(--border); opacity: 0.6; }
+  .flag-item.conflicted { border-left: 3px solid var(--purple); background: rgba(139,111,175,0.08); }
 
-    .row {
-      display: grid;
-      gap: 8px;
-      grid-template-columns: 1fr 1fr 1fr;
-    }
+  .flag-id {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    min-width: 160px;
+    word-break: break-all;
+  }
+  .flag-val {
+    font-family: var(--cond);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-hi);
+    flex: 1;
+  }
+  .flag-prio {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 2px 5px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .flag-prio.p5 { background: rgba(192,68,74,0.2); color: var(--red); }
+  .flag-prio.p4 { background: rgba(212,168,75,0.2); color: var(--yellow); }
+  .flag-prio.p3 { background: rgba(74,158,110,0.2); color: var(--green); }
+  .flag-prio.p2 { background: rgba(58,66,85,0.3); color: var(--dim); }
+  .flag-prio.p1 { background: rgba(30,35,48,0.3); color: var(--border2); }
 
-    .result {
-      margin-top: 10px;
-      border-left: 3px solid var(--accent);
-      padding: 8px 10px;
-      background: rgba(12, 20, 30, 0.85);
-      border-radius: 8px;
-      font-size: 0.87rem;
-    }
+  /* ── PANEL: URTEIL ──────────────────────────────────────────────── */
+  .verdict-form {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    max-width: 640px;
+  }
+  .verdict-field {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 16px;
+    border-radius: 2px;
+  }
+  .verdict-field label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: var(--muted);
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 8px;
+  }
+  .verdict-field input, .verdict-field select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border2);
+    color: var(--text-hi);
+    font-family: var(--cond);
+    font-size: 15px;
+    font-weight: 600;
+    padding: 10px 12px;
+    outline: none;
+    border-radius: 2px;
+    transition: border-color 0.15s;
+  }
+  .verdict-field input:focus, .verdict-field select:focus { border-color: var(--accent); }
+  .verdict-field select option { background: var(--bg2); }
+  .verdict-hint {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 6px;
+    font-style: italic;
+  }
 
-    .muted { color: var(--muted); }
+  .btn-primary {
+    padding: 12px 32px;
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: var(--cond);
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: all 0.15s;
+    border-radius: 2px;
+  }
+  .btn-primary:hover { background: rgba(200,169,110,0.1); }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
 
-    @media (max-width: 980px) {
-      .grid { grid-template-columns: 1fr; }
-      .status { grid-template-columns: 1fr; }
-      .controls { grid-template-columns: 1fr; }
-      .row { grid-template-columns: 1fr; }
-    }
-  </style>
+  /* ── ENDING SCREEN ──────────────────────────────────────────────── */
+  #ending-screen {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,11,14,0.97);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    padding: 24px;
+  }
+  #ending-screen.show { display: flex; }
+  .ending-box {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    max-width: 640px;
+    width: 100%;
+    padding: 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .ending-box::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(to right, transparent, var(--accent), transparent);
+  }
+  .ending-classification {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+  .ending-title {
+    font-family: var(--cond);
+    font-size: 28px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    color: var(--text-hi);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    line-height: 1;
+  }
+  .ending-score {
+    font-family: var(--mono);
+    font-size: 48px;
+    color: var(--accent);
+    margin: 20px 0;
+    line-height: 1;
+  }
+  .ending-score span {
+    font-size: 14px;
+    color: var(--muted);
+    vertical-align: super;
+  }
+  .ending-narrative {
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text);
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    margin-top: 16px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  .verdict-breakdown {
+    margin-top: 16px;
+    display: grid;
+    gap: 4px;
+  }
+  .vb-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    background: var(--bg3);
+    font-family: var(--mono);
+    font-size: 11px;
+    border-radius: 2px;
+  }
+  .vb-item.correct { border-left: 3px solid var(--green); }
+  .vb-item.wrong   { border-left: 3px solid var(--red); }
+  .vb-item .vb-key { color: var(--muted); flex: 1; }
+  .vb-item .vb-status { }
+
+  /* ── OPERATION MODAL ────────────────────────────────────────────── */
+  #op-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(10,11,14,0.9);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #op-modal.show { display: flex; }
+  .op-box {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    max-width: 500px;
+    width: 100%;
+    padding: 24px;
+    border-radius: 2px;
+  }
+  .op-title {
+    font-family: var(--cond);
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-hi);
+    margin-bottom: 8px;
+  }
+  .op-desc {
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text);
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .op-options { display: flex; flex-direction: column; gap: 8px; }
+  .op-option {
+    padding: 12px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+  .op-option:hover { border-color: var(--accent); }
+  .op-option h4 {
+    font-family: var(--cond);
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text-hi);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+  .op-option p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  /* ── NOTIFICATION ───────────────────────────────────────────────── */
+  #notification {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    padding: 10px 20px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-hi);
+    border-radius: 2px;
+    z-index: 999;
+    transition: transform 0.3s;
+    pointer-events: none;
+    max-width: 90vw;
+    text-align: center;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  }
+  #notification.show { transform: translateX(-50%) translateY(0); }
+  #notification.type-success { border-color: var(--green); color: var(--green); }
+  #notification.type-error   { border-color: var(--red);   color: var(--red); }
+  #notification.type-info    { border-color: var(--accent2); color: var(--accent2); }
+  #notification.type-warn    { border-color: var(--yellow); color: var(--yellow); }
+
+  /* ── CONFLICT BANNER ────────────────────────────────────────────── */
+  #conflict-banner {
+    position: fixed;
+    top: 44px;
+    left: 0; right: 0;
+    background: rgba(139,111,175,0.15);
+    border-bottom: 1px solid var(--purple);
+    padding: 8px 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: var(--purple);
+    text-transform: uppercase;
+    display: none;
+    z-index: 200;
+    cursor: pointer;
+  }
+  #conflict-banner.show { display: flex; align-items: center; gap: 10px; }
+
+  /* ── RESPONSIVE ─────────────────────────────────────────────────── */
+  @media (max-width: 600px) {
+    #node-detail { width: 100%; }
+    .briefing-meta { grid-template-columns: 1fr 1fr; }
+    .ending-score { font-size: 36px; }
+  }
+
+  /* ── ANIMATIONS ─────────────────────────────────────────────────── */
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  .wall-node { animation: fadeIn 0.3s ease; }
+  .flag-item { animation: fadeIn 0.2s ease; }
+
+  /* ── CCTV GLITCH ────────────────────────────────────────────────── */
+  @keyframes glitch {
+    0%,94%,100% { clip-path: none; transform: none; }
+    95%   { clip-path: inset(30% 0 40% 0); transform: translateX(-2px); }
+    96%   { clip-path: inset(60% 0 10% 0); transform: translateX(2px); }
+    97%   { clip-path: none; transform: none; }
+  }
+  .glitch-text { animation: glitch 8s infinite; }
+</style>
 </head>
 <body>
-  <main class="shell">
-    <header class="header">
-      <h1 class="title">Black Knot | Deterministische Fallrekonstruktion</h1>
-      <p class="subtitle">CASE-001 "Die weisse Stunde" mit Flag-Prioritaeten, Konfliktregeln und klarer Ending-Priorisierung.</p>
-    </header>
+<div id="app">
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div class="logo">▸ SHADOWCASE</div>
+    <div class="case-label" id="case-label">Fall I — Die weiße Stunde</div>
+    <div id="phase-indicator" class="phase-0">BRIEFING</div>
+  </div>
 
-    <section class="grid">
-      <article class="panel">
-        <h2>Briefing</h2>
-        <div id="briefingText"></div>
-        <div class="meta" id="briefingMeta"></div>
-      </article>
+  <!-- NAV TABS -->
+  <nav id="nav">
+    <div class="nav-tab active" data-tab="briefing">
+      Briefing
+    </div>
+    <div class="nav-tab" data-tab="wall">
+      Beweiswand
+      <span class="badge"></span>
+    </div>
+    <div class="nav-tab" data-tab="dossier">
+      Dossier
+      <span class="badge"></span>
+    </div>
+    <div class="nav-tab" data-tab="ops">
+      Operation
+      <span class="badge"></span>
+    </div>
+    <div class="nav-tab" data-tab="verdict">
+      Urteil
+    </div>
+  </nav>
 
-      <article class="panel">
-        <h2>Fortschritt</h2>
-        <p id="progressText" class="muted"></p>
-        <div class="status">
-          <div class="metric">Szenen<b id="metricScenes">0</b></div>
-          <div class="metric">Hinweise<b id="metricClues">0</b></div>
-          <div class="metric">Aktive Flags<b id="metricFlags">0</b></div>
-        </div>
-      </article>
-    </section>
+  <!-- CONFLICT BANNER -->
+  <div id="conflict-banner" onclick="openConflictResolver()">
+    ⚠ KRITISCHER KONFLIKT — Zwei Beweise widersprechen sich. Klicken zur Auflösung.
+  </div>
 
-    <section class="grid">
-      <article class="panel">
-        <h2>Szenenlauf</h2>
-        <div class="controls">
-          <select id="sceneSelect"></select>
-          <button id="enterSceneBtn">Szene oeffnen</button>
-        </div>
-        <div id="currentScene" class="stack"></div>
-        <div id="sceneChoices" class="list"></div>
-      </article>
+  <!-- CONTENT -->
+  <main id="content">
 
-      <article class="panel">
-        <h2>Hinweise</h2>
-        <div id="clues" class="list"></div>
-      </article>
-    </section>
-
-    <section class="grid">
-      <article class="panel">
-        <h2>Hypothesenstatus</h2>
-        <div id="hypotheses" class="list"></div>
-      </article>
-
-      <article class="panel">
-        <h2>Flag-Lagebild</h2>
-        <div id="activeFlags" class="list"></div>
-      </article>
-    </section>
-
-    <section class="panel">
-      <h2>Fallabschluss</h2>
-      <div class="row">
-        <button class="secondary" id="saveBtn">Stand speichern</button>
-        <button class="secondary" id="resetBtn">Progress zuruecksetzen</button>
-        <button id="endingBtn">Ending deterministisch auswerten</button>
+    <!-- BRIEFING PANEL -->
+    <div class="panel active" id="panel-briefing">
+      <div class="briefing-header">
+        <div class="subtitle">ABTEILUNG VII — OPERATIVE ANALYSE — STRENG VERTRAULICH</div>
+        <h1 id="b-title" class="glitch-text"></h1>
+        <div class="briefing-meta" id="b-meta"></div>
       </div>
-      <div id="endingResult" class="result" hidden></div>
-    </section>
-  </main>
+      <div class="briefing-text" id="b-text"></div>
+      <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:4px;">
+        <button class="btn-primary" onclick="startCase()">▶ Ermittlung beginnen</button>
+      </div>
+    </div>
 
-  <script type="module" src="./src/app.js"></script>
+    <!-- WALL PANEL -->
+    <div class="panel" id="panel-wall" style="padding:0;overflow:hidden;">
+      <div id="wall-canvas-wrap">
+        <svg id="wall-canvas"></svg>
+        <div id="wall-nodes"></div>
+        <div id="wall-toolbar">
+          <button class="wall-btn" id="btn-link-mode" title="Verbindung ziehen" onclick="toggleLinkMode()">⬡</button>
+          <button class="wall-btn" title="Alle zeigen" onclick="wallFitAll()">⊞</button>
+          <button class="wall-btn" title="Zoom +" onclick="wallZoom(1.2)">+</button>
+          <button class="wall-btn" title="Zoom -" onclick="wallZoom(0.8)">−</button>
+        </div>
+        <div id="link-type-selector">
+          <label>Verbindungstyp:</label>
+        </div>
+      </div>
+      <div id="node-detail">
+        <button id="node-detail-close" onclick="closeNodeDetail()">✕</button>
+        <div id="node-detail-inner"></div>
+      </div>
+    </div>
+
+    <!-- DOSSIER PANEL -->
+    <div class="panel" id="panel-dossier">
+      <div class="section-head">Gesicherte Fakten</div>
+      <div class="flag-grid" id="flags-confirmed"></div>
+      <div class="section-head">Hypothesen</div>
+      <div class="flag-grid" id="flags-probable"></div>
+      <div class="section-head">Widersprüche & Konflikte</div>
+      <div class="flag-grid" id="flags-conflicts"></div>
+      <div class="section-head">Alle Flags (Debug-Ansicht)</div>
+      <div class="flag-grid" id="flags-all"></div>
+    </div>
+
+    <!-- OPERATIONS PANEL -->
+    <div class="panel" id="panel-ops">
+      <div class="section-head">Operative Entscheidungen</div>
+      <div id="ops-list"></div>
+      <div id="ops-history">
+        <div class="section-head" style="margin-top:24px;">Getroffene Entscheidungen</div>
+        <div id="ops-done"></div>
+      </div>
+    </div>
+
+    <!-- VERDICT PANEL -->
+    <div class="panel" id="panel-verdict">
+      <div class="section-head">Fallthese — Abschließendes Urteil</div>
+      <p style="font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.7;">
+        Fassen Sie Ihre Ermittlungsergebnisse zusammen. Ihre These wird gegen die gesicherten Fakten geprüft.
+        Nicht jede Antwort muss korrekt sein — aber die Abgabe ist endgültig.
+      </p>
+      <div class="verdict-form" id="verdict-form"></div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ENDING SCREEN -->
+<div id="ending-screen">
+  <div class="ending-box">
+    <div class="ending-classification">FALLABSCHLUSS — ABTEILUNG VII</div>
+    <div class="ending-title" id="ending-title"></div>
+    <div class="ending-score"><span>Score: </span><span id="ending-score-num">0</span><span>/100</span></div>
+    <div class="verdict-breakdown" id="verdict-breakdown"></div>
+    <div class="ending-narrative" id="ending-narrative"></div>
+    <div style="margin-top:24px;display:flex;gap:12px;flex-wrap:wrap;">
+      <button class="btn-primary" onclick="showResolution()">Vollständige Auflösung</button>
+      <button class="btn-primary" onclick="restartCase()" style="border-color:var(--dim);color:var(--dim);">Neu starten</button>
+    </div>
+  </div>
+</div>
+
+<!-- OPERATION MODAL -->
+<div id="op-modal">
+  <div class="op-box">
+    <div class="op-title" id="op-modal-title"></div>
+    <div class="op-desc" id="op-modal-desc"></div>
+    <div class="op-options" id="op-modal-options"></div>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div id="notification"></div>
+
+<!-- SCRIPTS -->
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// ENGINE (inline — für PWA single-file)
+// ─────────────────────────────────────────────────────────────────────────────
+
+const FLAG_PRIORITY = { CRITICAL:5, CONFIRMED:4, PROBABLE:3, WEAK:2, NOISE:1 };
+
+class FlagSystem {
+  constructor() { this.flags = new Map(); this.history = []; this.conflictLog = []; }
+  set(id, value, priority=2, source='?', opts={}) {
+    const ex = this.flags.get(id);
+    if (ex?.locked) { this.conflictLog.push({type:'BLOCKED',id,value,priority,source,ts:Date.now()}); return false; }
+    if (ex && ex.priority > priority) { this.conflictLog.push({type:'REJECTED',id,value,priority,source,existingPriority:ex.priority,ts:Date.now()}); return false; }
+    if (ex && ex.priority === priority && priority === 5) {
+      this.conflictLog.push({type:'CRITICAL_CONFLICT',id,value,priority,source,existing:ex.value,ts:Date.now()});
+      ex.conflicted=true; ex.conflictValue=value; ex.conflictSource=source; return 'CONFLICT';
+    }
+    const flag = { id, value, priority, source, locked: opts.locked||priority===5, timestamp:Date.now(), conflicted:false, tags:opts.tags||[] };
+    this.history.push({action:'SET',id,prev:ex?.value??null,next:value,ts:flag.timestamp});
+    this.flags.set(id, flag);
+    return true;
+  }
+  get(id) { return this.flags.get(id)?.value??null; }
+  getFlag(id) { return this.flags.get(id)??null; }
+  getPriority(id) { return this.flags.get(id)?.priority??0; }
+  has(id) { return this.flags.has(id); }
+  allSet(ids) { return ids.every(id=>this.has(id)); }
+  anySet(ids) { return ids.some(id=>this.has(id)); }
+  resolveConflict(id, chosen) {
+    const f=this.flags.get(id); if(!f||!f.conflicted)return false;
+    f.value=chosen; f.conflicted=false; f.conflictValue=undefined;
+    this.history.push({action:'RESOLVE',id,chosen,ts:Date.now()}); return true;
+  }
+  serialize() { return {flags:Object.fromEntries(this.flags),history:this.history,conflictLog:this.conflictLog}; }
+  load(d) { this.flags=new Map(Object.entries(d.flags||{})); this.history=d.history||[]; this.conflictLog=d.conflictLog||[]; }
+}
+
+class EndingSystem {
+  constructor(fs) { this.flags=fs; this.endings=[]; }
+  register(e) { this.endings.push(e); this.endings.sort((a,b)=>b.priority-a.priority); }
+  evaluate() {
+    for (const e of this.endings) {
+      const req = (e.required||[]).every(r=>{
+        if(typeof r==='string') return this.flags.has(r);
+        if(r.type==='VALUE') return this.flags.get(r.id)===r.value;
+        if(r.type==='MIN_PRIORITY') return this.flags.getPriority(r.id)>=r.min;
+        if(r.type==='OR') return r.ids.some(id=>this.flags.has(id));
+        return false;
+      });
+      const forbOk = !(e.forbidden||[]).some(f=>this.flags.has(f));
+      if(req&&forbOk) {
+        const hasConflict = (e.required||[]).some(r=>{ const id=typeof r==='string'?r:r.id; return this.flags.getFlag(id)?.conflicted; });
+        return {...e, partial: hasConflict||!!e.partialOk};
+      }
+    }
+    return {id:'UNDECIDED',label:'Kein Ergebnis',priority:0,narrative:'Unzureichende Beweislage.',partial:false};
+  }
+  scoreVerdict(checks) {
+    let score=0; const bd=[];
+    for(const c of checks) {
+      const f=this.flags.getFlag(c.flagId);
+      if(!f){bd.push({id:c.flagId,result:'MISSING',points:0});continue;}
+      const ok=f.value===c.expectedValue;
+      const pts=ok?(c.basePoints+Math.floor(f.priority*4)):0;
+      score+=pts; bd.push({id:c.flagId,result:ok?'CORRECT':'WRONG',points:pts,priority:f.priority});
+    }
+    return {score:Math.min(100,score),breakdown:bd};
+  }
+}
+
+const LINK_TYPES_DEF = {
+  confirmed:   {color:'#4ade80',label:'Bestätigt'},
+  contradicts: {color:'#f87171',label:'Widerspricht'},
+  suggests:    {color:'#facc15',label:'Deutet auf'},
+  enables:     {color:'#60a5fa',label:'Ermöglichte'},
+  conceals:    {color:'#c084fc',label:'Verdeckt'},
+  motivated:   {color:'#fb923c',label:'Motiviert'},
+  saw:         {color:'#a3e635',label:'Sah'},
+  faked:       {color:'#e879f9',label:'Fälschte'},
+};
+
+class CaseEngine {
+  constructor(data) {
+    this.data=data; this.flags=new FlagSystem(); this.endings=new EndingSystem(this.flags);
+    this.nodes=new Map(); this.phase=0; this.opChoices=[]; this.startTime=Date.now();
+    this._init();
+  }
+  _init() {
+    const margin=80, cols=4, spacing={x:220,y:160};
+    let i=0;
+    for(const nd of this.data.nodes) {
+      const node={...nd, revealed:false, connections:nd.connections||[], x:margin+(i%cols)*spacing.x+Math.random()*40, y:margin+Math.floor(i/cols)*spacing.y+Math.random()*30, linkedTo:new Set()};
+      this.nodes.set(nd.id,node); i++;
+    }
+    for(const e of this.data.endings) this.endings.register(e);
+    for(const f of (this.data.startFlags||[])) this.flags.set(f.id,f.value,f.priority,f.source,{locked:f.locked});
+    for(const id of (this.data.startNodes||[])) this.revealNode(id);
+  }
+  revealNode(id) {
+    const n=this.nodes.get(id); if(!n||n.locked||n.revealed)return false;
+    n.revealed=true;
+    for(const f of (n.flagsOnReveal||[])) this.flags.set(f.id,f.value,f.priority,f.source,{locked:f.locked});
+    this._checkPhase(); return true;
+  }
+  makeLink(fromId,toId,linkType) {
+    const from=this.nodes.get(fromId); const to=this.nodes.get(toId);
+    if(!from||!to||!from.revealed||!to.revealed) return {ok:false};
+    const valid=from.connections.find(c=>c.targetId===toId&&c.linkType===linkType);
+    if(!valid) { const w=this.flags.get('wrong_links')||0; this.flags.set('wrong_links',w+1,2,'PLAYER'); return {ok:true,correct:false}; }
+    if(valid.flagOnConnect) { const f=valid.flagOnConnect; this.flags.set(f.id,f.value,f.priority,'PLAYER_DEDUCTION'); }
+    from.linkedTo.add(`${toId}::${linkType}`);
+    return {ok:true,correct:true};
+  }
+  chooseOp(choiceId,optionId) {
+    const ch=this.data.operationChoices?.find(c=>c.id===choiceId); if(!ch)return false;
+    const opt=ch.options.find(o=>o.id===optionId); if(!opt)return false;
+    this.opChoices.push({choiceId,optionId,ts:Date.now()});
+    for(const f of (opt.flags||[])) this.flags.set(f.id,f.value,f.priority,`OP_${choiceId}`);
+    for(const id of (opt.unlockNodes||[])) { const n=this.nodes.get(id); if(n)n.locked=false; }
+    for(const id of (opt.lockNodes||[]))   { const n=this.nodes.get(id); if(n){n.locked=true;n.revealed=false;} }
+    this._checkPhase(); return true;
+  }
+  submitVerdict(v) {
+    const ending=this.endings.evaluate();
+    const score=this.endings.scoreVerdict(this.data.verdictChecks||[]);
+    const vf={}; for(const [key,val] of Object.entries(v)) {
+      const def=this.data.verdictFields?.[key]; if(!def)continue;
+      const ok=def.correctValues.includes(val.toLowerCase().trim());
+      vf[key]={correct:ok,playerValue:val,correctValues:ok?undefined:def.correctValues,hint:ok?null:def.hint};
+    }
+    return {ending,score,verdictFlags:vf,timeElapsed:Date.now()-this.startTime};
+  }
+  _checkPhase() {
+    for(const t of (this.data.phaseTransitions||[])) {
+      if(t.fromPhase===this.phase&&this._cond(t.condition)) {
+        this.phase=t.toPhase;
+        for(const id of (t.unlockNodes||[])) { const n=this.nodes.get(id); if(n)n.locked=false; }
+        return;
+      }
+    }
+  }
+  _cond(c) {
+    if(!c)return true;
+    if(c.type==='FLAGS_ALL') return this.flags.allSet(c.ids);
+    if(c.type==='FLAGS_ANY') return this.flags.anySet(c.ids);
+    if(c.type==='REVEALED_COUNT') { const cnt=[...this.nodes.values()].filter(n=>n.revealed).length; return cnt>=c.min; }
+    return false;
+  }
+  hasConflicts() { return this.flags.conflictLog.some(c=>c.type==='CRITICAL_CONFLICT'); }
+  getConflicts() { return this.flags.conflictLog.filter(c=>c.type==='CRITICAL_CONFLICT'); }
+  save() { return JSON.stringify({phase:this.phase,flags:this.flags.serialize(),opChoices:this.opChoices,nodeState:Object.fromEntries([...this.nodes.entries()].map(([id,n])=>[id,{revealed:n.revealed,x:n.x,y:n.y,linkedTo:[...n.linkedTo]}]))}); }
+}
+</script>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// FALL 1 DATA (abbreviated inline — full data)
+// ─────────────────────────────────────────────────────────────────────────────
+const FALL_1 = {
+  id:'fall_1', title:'Die weiße Stunde', subtitle:'Fall 01 — Staffel I',
+  briefing:`<p>Donnerstag, 03:17 Uhr. Agent <strong>Viktor Szabo</strong>, Deckname WEISS, kehrt nicht aus einer routinemäßigen Übergabe zurück. Szabo war seit vier Jahren aktiv und lieferte zuverlässige Informationen über ein osteuropäisches Handelsnetzwerk.</p><p>Letzte bekannte Position: <strong>Hotel Meridian, Zimmer 412</strong>. Übergabepunkt: Parkhaus Ebene -2.</p><p>Es gibt keine Leiche. Kein Signal. Kein Kontakt.</p><p>Ihr Auftrag: Rekonstruieren Sie, was in dieser Nacht geschehen ist.</p>`,
+  startFlags:[
+    {id:'informant_name',value:'Viktor Szabo',priority:4,source:'BRIEFING',locked:true},
+    {id:'codename',value:'WEISS',priority:4,source:'BRIEFING',locked:true},
+    {id:'last_location',value:'Hotel Meridian',priority:3,source:'BRIEFING'},
+    {id:'meeting_type',value:'routine',priority:2,source:'BRIEFING'},
+  ],
+  startNodes:['szabo','hotel_meridian','briefing_doc'],
+  nodes:[
+    {id:'szabo',type:'person',label:'Viktor Szabo',description:'Informant, Deckname WEISS. Aktiv seit 4 Jahren. Spezialisiert auf osteuropäische Logistiknetzwerke. Bekannt für akkurate Berichte — zuletzt 3 Wochen Schweigen.',trustLevel:'B',flagsOnReveal:[{id:'szabo_active',value:true,priority:3,source:'FILE'},{id:'szabo_last_report',value:'3_weeks_ago',priority:3,source:'FILE'}],connections:[{targetId:'hotel_meridian',linkType:'saw',note:'Letzter bekannter Aufenthaltsort'},{targetId:'handler_muller',linkType:'confirmed',note:'Primärer Handler',flagOnConnect:{id:'handler_known',value:true,priority:3,source:'PLAYER_DEDUCTION'}},{targetId:'szabo_own_report',linkType:'suggests',note:'Enthielt zurückgehaltene Daten'},{targetId:'unknown_contact',linkType:'motivated',note:'Traf unbekannte Person am Vorabend'}]},
+    {id:'handler_muller',type:'person',label:'Hauptmann Klaus Müller',description:'Szabos Handler. Seit 8 Jahren in der Abteilung. Bestätigte den Übergabeauftrag um 22:30 Uhr. Behauptet, er habe danach keinen Kontakt mehr gehabt.',trustLevel:'C',flagsOnReveal:[{id:'muller_cleared_szabo',value:true,priority:2,source:'MULLER_STATEMENT'}],connections:[{targetId:'szabo',linkType:'confirmed',note:'Handler/Informant-Beziehung'},{targetId:'muller_phone',linkType:'enables',note:'Telefonat um 02:47 Uhr — unerklärt',flagOnConnect:{id:'muller_phone_anomaly',value:true,priority:4,source:'PLAYER_DEDUCTION'}},{targetId:'parking_garage',linkType:'saw',note:'War laut eigener Aussage nie dort'}]},
+    {id:'unknown_contact',type:'person',label:'Unbekannte Kontaktperson',description:'Hotelkamera erfasste eine Person in Szabos Zimmerflur um 21:15 Uhr. Gesicht nicht erkennbar. Bewegungsprofil: professionell, kontrolliert.',trustLevel:'C',flagsOnReveal:[{id:'contact_present',value:true,priority:3,source:'CCTV_HOTEL'}],connections:[{targetId:'hotel_room_412',linkType:'saw',note:'Vor Szabos Zimmer gesichtet'},{targetId:'szabo',linkType:'motivated',note:'Mögliche Instruktion oder Drohung'},{targetId:'envelope_found',linkType:'enables',note:'Ließ Umschlag zurück'}]},
+    {id:'witness_reception',type:'person',label:'Rezeptionist Tomáš Horak',description:'Nachtschicht 23:00–06:00. Sah Szabo gegen 01:30 Uhr die Lobby passieren. Sagt, Szabo habe „seltsam schnell" ausgesehen. Nervös bei Befragung.',trustLevel:'D',flagsOnReveal:[{id:'szabo_lobby_01h30',value:true,priority:2,source:'WITNESS_HORAK'}],connections:[{targetId:'hotel_meridian',linkType:'saw',note:'Stammt von dort, kennt das Hotel'},{targetId:'cctv_lobby',linkType:'contradicts',note:'Kamera zeigt Lobby leer um 01:30',flagOnConnect:{id:'horak_statement_suspicious',value:true,priority:4,source:'PLAYER_DEDUCTION'}}]},
+    {id:'real_handler',type:'person',label:'Agent Irina Westermann',description:'GEHEIMAKTE. Westermann war Szabos inoffizielle Backup-Kontaktperson. Müller wusste davon nicht. Sie initiierte die Übergabe eigenständig.',trustLevel:'A',locked:true,flagsOnReveal:[{id:'westermann_exists',value:true,priority:5,source:'CLASSIFIED',locked:true},{id:'real_initiator',value:'Westermann',priority:5,source:'CLASSIFIED',locked:true},{id:'muller_was_deceived',value:true,priority:4,source:'CLASSIFIED'}],connections:[{targetId:'parking_garage',linkType:'enables',note:'War im Parkhaus — Zeuge C',flagOnConnect:{id:'westermann_at_garage',value:true,priority:4,source:'PLAYER_DEDUCTION'}},{targetId:'szabo',linkType:'motivated',note:'Szabo vertraute ihr mehr als Müller'},{targetId:'szabo_data',linkType:'enables',note:'Die Daten — für sie bestimmt',flagOnConnect:{id:'data_destination_known',value:true,priority:5,source:'PLAYER_DEDUCTION'}}]},
+    {id:'hotel_meridian',type:'location',label:'Hotel Meridian',description:'Vier-Sterne-Hotel. Szabo buchte unter Alias „Karl Bauer". Check-in 19:45. Checkout: nie erfolgt. Zimmer 412 im 4. Stock, Trakt C.',trustLevel:'A',flagsOnReveal:[{id:'hotel_alias',value:'Karl Bauer',priority:3,source:'HOTEL_RECORDS'}],connections:[{targetId:'hotel_room_412',linkType:'confirmed',note:'Buchungsdatensatz'},{targetId:'cctv_lobby',linkType:'enables',note:'CCTV vorhanden'},{targetId:'witness_reception',linkType:'saw',note:'Rezeptionist Horak war anwesend'}]},
+    {id:'hotel_room_412',type:'location',label:'Zimmer 412',description:'Zeigt Spuren eines schnellen Aufbruchs. Koffer zurückgelassen. Bettwäsche benutzt. Auf dem Nachttisch: ein Glas mit Fingerabdrücken — nicht Szabos.',trustLevel:'A',flagsOnReveal:[{id:'quick_departure',value:true,priority:4,source:'FORENSICS'},{id:'foreign_prints',value:true,priority:4,source:'FORENSICS'},{id:'luggage_left',value:true,priority:3,source:'FORENSICS'}],connections:[{targetId:'unknown_contact',linkType:'saw',note:'Fremde Fingerabdrücke'},{targetId:'envelope_found',linkType:'confirmed',note:'Umschlag unter dem Bett'},{targetId:'szabo',linkType:'confirmed',note:'Sein Zimmer'}]},
+    {id:'parking_garage',type:'location',label:'Parkhaus — Ebene -2',description:'Übergabepunkt laut Protokoll. Kamera auf Ebene -2 war um 01:15 Uhr ausgefallen — 14 Minuten offline. Danach: keine Fahrzeuge registriert, aber Reifenspuren auf frischem Öl.',trustLevel:'B',flagsOnReveal:[{id:'camera_offline',value:true,priority:4,source:'SECURITY_LOG'},{id:'tire_tracks',value:true,priority:3,source:'FORENSICS'}],connections:[{targetId:'szabo',linkType:'saw',note:'Übergabepunkt'},{targetId:'muller_phone',linkType:'contradicts',note:'Müller sagt er war nie hier — Reifenmuster passt zu Dienstwagen',flagOnConnect:{id:'muller_at_garage',value:true,priority:4,source:'PLAYER_DEDUCTION'}},{targetId:'real_handler',linkType:'enables',note:'Verbindung zu Westermann'}]},
+    {id:'szabo_safe_house',type:'location',label:'Safehouse Kaiserstr. 17',description:'Szabo kannte dieses Versteck — nicht in offiziellen Akten. Entdeckt durch Quervergleich alter Spesenabrechnungen. Licht in dieser Nacht an.',trustLevel:'B',locked:true,flagsOnReveal:[{id:'safehouse_used',value:true,priority:3,source:'EXPENSE_RECORDS'}],connections:[{targetId:'szabo',linkType:'confirmed',note:'Sein informelles Versteck'},{targetId:'real_handler',linkType:'motivated',note:'Westermann wusste davon'},{targetId:'szabo_data',linkType:'enables',note:'Dort befand sich der Datensatz'}]},
+    {id:'envelope_found',type:'object',label:'Umschlag — ohne Absender',description:'Unter dem Bett in Zimmer 412. Enthält eine handgeschriebene Koordinate und die Uhrzeit „02:00". Keine Fingerabdrücke außen. Papier: Standard, in drei Ländern erhältlich.',trustLevel:'B',flagsOnReveal:[{id:'envelope_coords',value:'48.1351N_11.5820E',priority:3,source:'FORENSICS'},{id:'envelope_time',value:'02:00',priority:3,source:'FORENSICS'}],connections:[{targetId:'parking_garage',linkType:'confirms',note:'Koordinate entspricht Parkhaus-Einfahrt'},{targetId:'unknown_contact',linkType:'enabled',note:'Von unbekannter Person hinterlassen'}]},
+    {id:'muller_phone',type:'object',label:'Telefonprotokoll — Müller',description:'Abgehörtes Telefonat: Müller rief eine unregistrierte Nummer um 02:47 Uhr an. Dauer: 3 Minuten. Empfänger-Standort: Parkhaus.',trustLevel:'A',flagsOnReveal:[{id:'muller_called_garage',value:true,priority:4,source:'PHONE_TAP'},{id:'call_time',value:'02:47',priority:4,source:'PHONE_TAP'}],connections:[{targetId:'handler_muller',linkType:'confirms',note:'Müllers Gerät'},{targetId:'parking_garage',linkType:'enables',note:'Empfänger war im Parkhaus'},{targetId:'real_handler',linkType:'motivated',note:'War Westermann am Telefon?'}]},
+    {id:'szabo_own_report',type:'document',label:'Szabos letzter Bericht',description:'Drei Wochen alter Bericht. Inhalt oberflächlich. Im Anhang fehlt Seite 7. Metadaten zeigen: Seite 7 existierte, wurde nachträglich entfernt — 48 Stunden vor dem Verschwinden.',trustLevel:'B',flagsOnReveal:[{id:'report_page_missing',value:true,priority:4,source:'METADATA'},{id:'deletion_timestamp',value:'minus48h',priority:3,source:'METADATA'}],connections:[{targetId:'szabo',linkType:'confirms',note:'Sein eigener Bericht'},{targetId:'szabo_data',linkType:'suggests',note:'Was stand auf Seite 7?'},{targetId:'muller_phone',linkType:'motivated',note:'Löschung — Müller hatte Zugriff'}]},
+    {id:'szabo_data',type:'object',label:'Datensatz — Netzwerk „Osten-7"',description:'GESPERRT. Szabo hatte Zugriff auf ein Dokument, das ein vollständiges Liefernetzwerk enthüllte. Er hat es kopiert. Der Verbleib ist unbekannt. Dieser Datensatz war der eigentliche Kern der Übergabe.',trustLevel:'A',locked:true,flagsOnReveal:[{id:'data_existed',value:true,priority:5,source:'CLASSIFIED',locked:true},{id:'data_was_copied',value:true,priority:5,source:'CLASSIFIED',locked:true},{id:'szabo_not_victim',value:true,priority:4,source:'CLASSIFIED'}],connections:[{targetId:'szabo',linkType:'confirmed',note:'Szabo besaß den Datensatz'},{targetId:'real_handler',linkType:'motivated',note:'Westermann wollte ihn haben'},{targetId:'szabo_safe_house',linkType:'enables',note:'Dort verwahrt'}]},
+    {id:'cctv_lobby',type:'event',label:'CCTV: Lobby 01:30 Uhr',description:'Kameraaufnahme zeigt die Lobby um 01:28–01:35 Uhr. Kein Szabo. Aber: Ein schwarzer Mantel im Bild — Richtung Seitenausgang. Bildqualität: 38%, starkes Rauschen.',trustLevel:'C',flagsOnReveal:[{id:'szabo_not_in_lobby',value:true,priority:3,source:'CCTV'},{id:'black_coat_seen',value:true,priority:2,source:'CCTV'}],connections:[{targetId:'witness_reception',linkType:'contradicts',note:'Horak sah Szabo — Kamera nicht'},{targetId:'unknown_contact',linkType:'suggests',note:'War das die unbekannte Person?'},{targetId:'hotel_room_412',linkType:'enables',note:'Szabo durch Hinterausgang?'}]},
+    {id:'briefing_doc',type:'document',label:'Übergabe-Instruktion (intern)',description:'Offizielle Anweisung für Szabo. Unterzeichnet von Müller. Zeitfenster: 01:00–02:30. Übergabegegenstand nicht spezifiziert — Feld leer. Das ist protokollwidrig.',trustLevel:'B',flagsOnReveal:[{id:'transfer_object_blank',value:true,priority:4,source:'INTERNAL_DOC'},{id:'muller_signed',value:true,priority:3,source:'INTERNAL_DOC'}],connections:[{targetId:'handler_muller',linkType:'confirmed',note:'Müllers Unterschrift'},{targetId:'parking_garage',linkType:'enables',note:'Übergabeort'},{targetId:'szabo_own_report',linkType:'contradicts',note:'Bericht und Auftrag stimmen nicht überein'}]},
+  ],
+  phaseTransitions:[
+    {fromPhase:0,toPhase:1,condition:{type:'REVEALED_COUNT',min:3},unlockNodes:['witness_reception','cctv_lobby']},
+    {fromPhase:1,toPhase:2,condition:{type:'FLAGS_ALL',ids:['foreign_prints','camera_offline']},unlockNodes:['real_handler','szabo_safe_house']},
+    {fromPhase:2,toPhase:3,condition:{type:'FLAGS_ANY',ids:['westermann_exists','muller_at_garage']},unlockNodes:['szabo_data']},
+  ],
+  operationChoices:[
+    {id:'op_muller',phase:1,label:'Umgang mit Müller',description:'Müller verhält sich auffällig. Sein Telefonprotokoll ist anomal. Wie gehen Sie vor?',options:[
+      {id:'observe',label:'Weiter observieren',description:'Müller nicht konfrontieren. Warten, ob er sich selbst belastet. Mehr Beweise sammeln.',flags:[{id:'muller_observed',value:true,priority:3,source:'OP'}],unlockNodes:['muller_phone']},
+      {id:'confront',label:'Direkt konfrontieren',description:'Müller befragen. Risiko: er warnt Westermann, falls verbunden. Schnelle Erkenntnisse, aber mit Konsequenzen.',flags:[{id:'muller_confronted',value:true,priority:3,source:'OP'},{id:'westermann_warned',value:true,priority:3,source:'OP_CONSEQUENCE'}],lockNodes:['real_handler']},
+      {id:'archive',label:'Für später markieren',description:'Müller wird nicht konfrontiert, aber alle Aktivitäten werden protokolliert.',flags:[{id:'muller_flagged',value:true,priority:2,source:'OP'}]},
+    ]},
+    {id:'op_safehouse',phase:2,label:'Safehouse-Zugriff',description:'Das Safehouse in der Kaiserstraße zeigt Aktivität. Licht brennt. Was tun?',options:[
+      {id:'immediate_raid',label:'Sofort eingreifen',description:'Team zum Safehouse. Risiko: Szabo (falls dort) flieht oder wird gefährdet. Aber: Datensatz könnte gesichert werden.',flags:[{id:'raid_executed',value:true,priority:4,source:'OP'}],unlockNodes:['szabo_data']},
+      {id:'wait_confirm',label:'Erst bestätigen',description:'Warten auf Bestätigung. Ruhiger, aber zeitkritisch.',flags:[{id:'safehouse_verified',value:true,priority:3,source:'OP'}],unlockNodes:['szabo_data','real_handler']},
+    ]},
+  ],
+  endings:[
+    {id:'full_truth',label:'Vollständige Auflösung',priority:100,required:['westermann_exists','data_destination_known',{type:'VALUE',id:'real_initiator',value:'Westermann'},'muller_was_deceived',{type:'MIN_PRIORITY',id:'szabo_not_victim',min:4}],forbidden:['westermann_warned'],narrative:'Szabo war kein Opfer. Er handelte eigenständig — und Westermann war der einzige Mensch, dem er vertraute. Die Übergabe war keine Exfiltration, sondern ein kontrollierter Abgang. Szabo hat das Netzwerk Osten-7 an Westermann persönlich übergeben. Müller wurde bewusst außen vor gelassen. Der „Vermisstenfall" war ein inszenierter Schutz.<br><br>Was Sie jetzt wissen: Es gibt jemanden in Ihrer Abteilung, der eigene Netzwerke betreibt. Was Sie noch nicht wissen: Warum.'},
+    {id:'partial_muller',label:'Teilauflösung: Müller verdächtig',priority:70,required:['muller_phone_anomaly','camera_offline','transfer_object_blank'],forbidden:['westermann_exists'],narrative:'Müller ist tiefer involviert als zugegeben. Telefonat, lückenhafte Anweisung, manipulierte Kamera — alles deutet auf ihn hin. Die Wahrheit über Szabo bleibt im Dunkeln. Die echte Geschichte — Westermann, Osten-7 — wird erst später sichtbar.',partialOk:true},
+    {id:'szabo_fled',label:'Fehldeutung: Szabo gilt als Überläufer',priority:40,required:['szabo_not_in_lobby','quick_departure','report_page_missing'],forbidden:['westermann_exists','data_destination_known'],narrative:'Die Beweise wurden fehlinterpretiert. Szabo wurde als Überläufer eingestuft. Der Datensatz gilt als kompromittiert. Westermann blieb unentdeckt. Müller wurde entlastet. Der Fall wird Cold Case — und belastet alle Folge-Ermittlungen.'},
+    {id:'undecided',label:'Cold Case — kein Ergebnis',priority:10,required:[],forbidden:[],narrative:'Zu viele Widersprüche, zu wenig gesicherte Verbindungen. Der Fall bleibt offen. Szabo — unbekannt. Das Netzwerk Osten-7 — aktiv. Die Abteilung verlor Vertrauen in den Ermittler.'},
+  ],
+  verdictFields:{
+    suspect:{correctValues:['westermann','irina westermann','agent westermann'],hint:'Wer hat die Übergabe wirklich initiiert?'},
+    szabo_status:{correctValues:['freiwillig','abgang','kooperiert','akteur','nicht opfer'],hint:'War Szabo Opfer — oder Akteur?'},
+    data_destination:{correctValues:['westermann','safehouse','kaiserstraße','kaiserstr'],hint:'Wo befanden sich die Daten Osten-7?'},
+    muller_role:{correctValues:['unwissend','getäuscht','kein täter','kein taeter','opfer'],hint:'War Müller Täter oder Opfer?'},
+  },
+  verdictChecks:[
+    {flagId:'westermann_exists',expectedValue:true,basePoints:30},
+    {flagId:'real_initiator',expectedValue:'Westermann',basePoints:25},
+    {flagId:'szabo_not_victim',expectedValue:true,basePoints:20},
+    {flagId:'muller_was_deceived',expectedValue:true,basePoints:15},
+    {flagId:'data_was_copied',expectedValue:true,basePoints:10},
+  ],
+};
+</script>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// UI CONTROLLER
+// ─────────────────────────────────────────────────────────────────────────────
+
+let engine = null;
+let wallTransform = { x: 0, y: 0, scale: 1 };
+let isDragging = false, dragStart = null, dragNode = null;
+let linkMode = false, linkSourceId = null;
+let selectedLinkType = 'confirmed';
+let nodePositions = {};
+
+// Phase labels
+const PHASE_LABELS = ['BRIEFING','ERKUNDEN','BEWEISE','DRUCKPHASE','URTEIL','ABSCHLUSS'];
+
+// ── INIT ─────────────────────────────────────────────────────────────────────
+
+function init() {
+  loadBriefing();
+  setupNavTabs();
+  setupLinkTypeSelector();
+}
+
+function loadBriefing() {
+  document.getElementById('b-title').textContent = FALL_1.title;
+  document.getElementById('b-text').innerHTML = FALL_1.briefing;
+  document.getElementById('b-meta').innerHTML = `
+    <div class="meta-item"><div class="k">Akte</div><div class="v">${FALL_1.subtitle}</div></div>
+    <div class="meta-item"><div class="k">Status</div><div class="v">OFFEN</div></div>
+    <div class="meta-item"><div class="k">Zeitdruck</div><div class="v">Hoch</div></div>
+    <div class="meta-item"><div class="k">Klassifizierung</div><div class="v">STRENG GEH.</div></div>
+  `;
+  document.getElementById('case-label').textContent = `Fall I — ${FALL_1.title}`;
+}
+
+function startCase() {
+  const saved = localStorage.getItem('sc_fall1_save');
+  if (saved) {
+    try {
+      engine = new CaseEngine(FALL_1);
+      // simple reload — rebuild from scratch for now
+    } catch(e) {}
+  }
+  engine = new CaseEngine(FALL_1);
+  switchTab('wall');
+  renderWall();
+  updatePhaseUI();
+  notify('Ermittlung gestartet — Beweiswand aktiv', 'info');
+  setTimeout(checkOperations, 800);
+}
+
+// ── TABS ─────────────────────────────────────────────────────────────────────
+
+function setupNavTabs() {
+  document.querySelectorAll('.nav-tab').forEach(tab => {
+    tab.addEventListener('click', () => switchTab(tab.dataset.tab));
+  });
+}
+
+function switchTab(name) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  const panel = document.getElementById('panel-' + name);
+  if (panel) {
+    panel.classList.add('active');
+    if (name === 'dossier' && engine) renderDossier();
+    if (name === 'ops' && engine) renderOps();
+    if (name === 'verdict' && engine) renderVerdictForm();
+  }
+}
+
+// ── WALL ─────────────────────────────────────────────────────────────────────
+
+function renderWall() {
+  if (!engine) return;
+  const container = document.getElementById('wall-nodes');
+  const svg = document.getElementById('wall-canvas');
+  container.innerHTML = '';
+
+  // Size SVG
+  const wrap = document.getElementById('wall-canvas-wrap');
+  svg.setAttribute('width', wrap.offsetWidth);
+  svg.setAttribute('height', wrap.offsetHeight);
+  svg.innerHTML = '';
+
+  // Draw existing links
+  for (const [id, node] of engine.nodes) {
+    if (!node.revealed) continue;
+    for (const linked of node.linkedTo) {
+      const [targetId, ltype] = linked.split('::');
+      const target = engine.nodes.get(targetId);
+      if (!target || !target.revealed) continue;
+      drawLink(svg, node, target, ltype);
+    }
+  }
+
+  // Draw nodes
+  for (const [id, node] of engine.nodes) {
+    if (!node.revealed) continue;
+    const el = document.createElement('div');
+    el.className = `wall-node type-${node.type}`;
+    el.id = 'node-' + id;
+    el.style.left = (node.x + wallTransform.x) + 'px';
+    el.style.top  = (node.y + wallTransform.y) + 'px';
+    el.innerHTML = `
+      <div class="node-type">${node.type}</div>
+      <div class="node-label">${node.label}</div>
+      <div class="node-trust ${node.trustLevel}">${getTrustLabel(node.trustLevel)}</div>
+    `;
+    el.addEventListener('click', (e) => { e.stopPropagation(); handleNodeClick(id); });
+    makeDraggable(el, id);
+    container.appendChild(el);
+  }
+
+  // Marker for locked nodes (phase hint)
+  let lockedCount = 0;
+  for (const [id, node] of engine.nodes) {
+    if (!node.revealed && !node.locked) lockedCount++;
+  }
+}
+
+function drawLink(svg, from, to, ltype) {
+  const def = LINK_TYPES_DEF[ltype] || {color:'#3a4255'};
+  const fx = from.x + wallTransform.x + 70;
+  const fy = from.y + wallTransform.y + 28;
+  const tx = to.x + wallTransform.x + 70;
+  const ty = to.y + wallTransform.y + 28;
+  const mx = (fx+tx)/2, my = (fy+ty)/2 - 30;
+
+  const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+  path.setAttribute('d', `M${fx},${fy} Q${mx},${my} ${tx},${ty}`);
+  path.setAttribute('stroke', def.color);
+  path.setAttribute('stroke-width', '1.5');
+  path.setAttribute('fill', 'none');
+  path.setAttribute('opacity', '0.6');
+  path.setAttribute('stroke-dasharray', ltype==='contradicts'?'4,3':'none');
+  svg.appendChild(path);
+
+  // Label on path
+  const txt = document.createElementNS('http://www.w3.org/2000/svg','text');
+  txt.setAttribute('x', mx);
+  txt.setAttribute('y', my-4);
+  txt.setAttribute('text-anchor','middle');
+  txt.setAttribute('fill', def.color);
+  txt.setAttribute('font-size','9');
+  txt.setAttribute('font-family','Share Tech Mono, monospace');
+  txt.setAttribute('opacity','0.8');
+  txt.textContent = def.label.toUpperCase();
+  svg.appendChild(txt);
+}
+
+function makeDraggable(el, nodeId) {
+  let startX, startY, startNX, startNY, moved = false;
+  el.addEventListener('pointerdown', (e) => {
+    if (linkMode) return;
+    e.stopPropagation();
+    startX = e.clientX; startY = e.clientY;
+    const node = engine.nodes.get(nodeId);
+    startNX = node.x; startNY = node.y;
+    moved = false;
+    dragNode = nodeId;
+
+    const onMove = (ev) => {
+      const dx = ev.clientX - startX, dy = ev.clientY - startY;
+      if (Math.abs(dx)+Math.abs(dy) > 3) moved = true;
+      node.x = startNX + dx; node.y = startNY + dy;
+      el.style.left = (node.x + wallTransform.x) + 'px';
+      el.style.top  = (node.y + wallTransform.y) + 'px';
+      redrawLinks();
+    };
+    const onUp = () => {
+      dragNode = null;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      if (!moved) handleNodeClick(nodeId);
+    };
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+  });
+}
+
+function redrawLinks() {
+  const svg = document.getElementById('wall-canvas');
+  svg.innerHTML = '';
+  for (const [id, node] of engine.nodes) {
+    if (!node.revealed) continue;
+    for (const linked of node.linkedTo) {
+      const [targetId, ltype] = linked.split('::');
+      const target = engine.nodes.get(targetId);
+      if (!target || !target.revealed) continue;
+      drawLink(svg, node, target, ltype);
+    }
+  }
+}
+
+function toggleLinkMode() {
+  linkMode = !linkMode;
+  linkSourceId = null;
+  document.getElementById('btn-link-mode').classList.toggle('active-link', linkMode);
+  document.getElementById('link-type-selector').classList.toggle('visible', linkMode);
+  if (linkMode) notify('Verbindungsmodus: Erstes Node wählen', 'info');
+}
+
+function handleNodeClick(id) {
+  if (linkMode) {
+    if (!linkSourceId) {
+      linkSourceId = id;
+      document.getElementById('node-'+id)?.classList.add('selected');
+      notify(`Verbinde von: ${engine.nodes.get(id).label}`, 'info');
+    } else if (linkSourceId !== id) {
+      const result = engine.makeLink(linkSourceId, id, selectedLinkType);
+      if (result.correct) {
+        notify(`✓ Verbindung gesetzt: ${selectedLinkType}`, 'success');
+        engine.nodes.get(linkSourceId).linkedTo.add(`${id}::${selectedLinkType}`);
+        renderWall();
+        updatePhaseUI();
+        checkConflicts();
+        checkOperations();
+      } else if (result.ok) {
+        notify('✗ Verbindung nicht belegbar', 'error');
+      }
+      document.getElementById('node-'+linkSourceId)?.classList.remove('selected');
+      linkSourceId = null;
+    }
+  } else {
+    openNodeDetail(id);
+  }
+}
+
+function setupLinkTypeSelector() {
+  const sel = document.getElementById('link-type-selector');
+  sel.innerHTML = '<label>Verbindungstyp:</label>';
+  for (const [key, def] of Object.entries(LINK_TYPES_DEF)) {
+    const btn = document.createElement('button');
+    btn.className = 'link-type-btn' + (key === selectedLinkType ? ' selected' : '');
+    btn.style.color = def.color;
+    btn.textContent = def.label;
+    btn.onclick = () => {
+      selectedLinkType = key;
+      sel.querySelectorAll('.link-type-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+    sel.appendChild(btn);
+  }
+}
+
+function wallFitAll() { wallTransform = {x:20,y:20,scale:1}; renderWall(); }
+
+function wallZoom(factor) {
+  wallTransform.scale = Math.max(0.4, Math.min(2, wallTransform.scale * factor));
+  // Simple zoom: adjust positions
+  for (const [id, node] of engine.nodes) {
+    if (node.revealed) {
+      const el = document.getElementById('node-'+id);
+      if (el) { el.style.left=(node.x+wallTransform.x)+'px'; el.style.top=(node.y+wallTransform.y)+'px'; }
+    }
+  }
+}
+
+// ── NODE DETAIL ───────────────────────────────────────────────────────────────
+
+function openNodeDetail(id) {
+  const node = engine.nodes.get(id);
+  if (!node || !node.revealed) return;
+
+  const det = document.getElementById('node-detail');
+  const inner = document.getElementById('node-detail-inner');
+  const trust = TRUST_META[node.trustLevel] || {};
+
+  let connHtml = '';
+  for (const c of node.connections) {
+    const target = engine.nodes.get(c.targetId);
+    if (!target) continue;
+    const ld = LINK_TYPES_DEF[c.linkType] || {};
+    const isLinked = node.linkedTo.has(`${c.targetId}::${c.linkType}`);
+    const canReveal = !target.revealed && !target.locked;
+    connHtml += `
+      <div class="conn-item">
+        <div class="conn-type" style="color:${ld.color||'#606880'}">${ld.label||c.linkType}</div>
+        <div class="conn-target">${target.label}</div>
+        <div class="conn-note">${c.note||''}</div>
+        ${canReveal ? `<button class="link-btn" onclick="revealFromDetail('${c.targetId}')">▶ Node enthüllen</button>` : ''}
+        ${target.revealed && !isLinked ? `<button class="link-btn" onclick="quickLink('${id}','${c.targetId}','${c.linkType}')">⬡ Verbinden (${ld.label||c.linkType})</button>` : ''}
+        ${isLinked ? `<button class="link-btn linked" disabled>✓ Verbunden</button>` : ''}
+      </div>`;
+  }
+
+  inner.innerHTML = `
+    <div class="detail-type">${node.type}</div>
+    <div class="detail-title">${node.label}</div>
+    <div class="detail-trust" style="border-color:${trust.color||'#3a4255'};color:${trust.color||'#606880'}">
+      <span>Quelle ${node.trustLevel}</span><span>${trust.label||''}</span>
+    </div>
+    <div class="detail-desc">${node.description}</div>
+    <div class="connections-list">
+      <h3>Mögliche Verbindungen (${node.connections.length})</h3>
+      ${connHtml || '<div style="color:var(--muted);font-size:12px">Keine weiteren Verbindungen verfügbar</div>'}
+    </div>
+  `;
+  det.classList.add('open');
+}
+
+function closeNodeDetail() {
+  document.getElementById('node-detail').classList.remove('open');
+}
+
+function revealFromDetail(id) {
+  if (!engine) return;
+  const ok = engine.revealNode(id);
+  if (ok) {
+    notify(`Node enthüllt: ${engine.nodes.get(id).label}`, 'success');
+    renderWall();
+    updatePhaseUI();
+    checkConflicts();
+    checkOperations();
+    // Refresh detail for current selection
+  }
+}
+
+function quickLink(fromId, toId, ltype) {
+  if (!engine) return;
+  const result = engine.makeLink(fromId, toId, ltype);
+  if (result.correct) {
+    engine.nodes.get(fromId).linkedTo.add(`${toId}::${ltype}`);
+    notify(`✓ Verbindung gesetzt`, 'success');
+    renderWall();
+    updatePhaseUI();
+    openNodeDetail(fromId);
+    checkConflicts();
+    checkOperations();
+  } else { notify('✗ Verbindung nicht belegbar', 'error'); }
+}
+
+// ── DOSSIER ───────────────────────────────────────────────────────────────────
+
+const PRIO_LABELS = ['','RAUSCHEN','SCHWACH','HYPOTHESE','BESTÄTIGT','KRITISCH'];
+
+function renderDossier() {
+  if (!engine) return;
+  const conf = document.getElementById('flags-confirmed');
+  const prob = document.getElementById('flags-probable');
+  const confl = document.getElementById('flags-conflicts');
+  const all = document.getElementById('flags-all');
+  conf.innerHTML = ''; prob.innerHTML = ''; confl.innerHTML = ''; all.innerHTML = '';
+
+  for (const [id, flag] of engine.flags.flags) {
+    const pCls = `p${flag.priority}`;
+    const conflCls = flag.conflicted ? ' conflicted' : '';
+    const html = `
+      <div class="flag-item priority-${flag.priority}${conflCls}">
+        <span class="flag-id">${id}</span>
+        <span class="flag-val">${flag.conflicted ? `${flag.value} ⚡ ${flag.conflictValue}` : String(flag.value)}</span>
+        <span class="flag-prio ${pCls}">${PRIO_LABELS[flag.priority]||flag.priority}</span>
+      </div>`;
+    all.innerHTML += html;
+    if (flag.conflicted) confl.innerHTML += html;
+    else if (flag.priority >= 4) conf.innerHTML += html;
+    else if (flag.priority === 3) prob.innerHTML += html;
+  }
+  if (!conf.innerHTML) conf.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px">Noch keine gesicherten Fakten</div>';
+  if (!prob.innerHTML) prob.innerHTML = '<div style="color:var(--muted);font-size:12px;padding:8px">Noch keine Hypothesen</div>';
+  if (!confl.innerHTML) confl.innerHTML = '<div style="color:var(--green);font-size:12px;padding:8px">✓ Keine aktiven Konflikte</div>';
+}
+
+// ── OPERATIONS ────────────────────────────────────────────────────────────────
+
+function renderOps() {
+  if (!engine) return;
+  const list = document.getElementById('ops-list');
+  const done = document.getElementById('ops-done');
+  list.innerHTML = '';
+  done.innerHTML = '';
+
+  const completed = new Set(engine.opChoices.map(c => c.choiceId));
+
+  for (const op of (engine.data.operationChoices || [])) {
+    if (completed.has(op.id)) {
+      const ch = engine.opChoices.find(c => c.choiceId === op.id);
+      const opt = op.options.find(o => o.id === ch.optionId);
+      done.innerHTML += `
+        <div class="flag-item priority-3" style="margin-bottom:8px">
+          <span class="flag-id">${op.label}</span>
+          <span class="flag-val">▶ ${opt?.label||ch.optionId}</span>
+          <span class="flag-prio p3">AUSGEFÜHRT</span>
+        </div>`;
+    } else if (op.phase <= engine.phase) {
+      list.innerHTML += `
+        <div class="verdict-field" style="cursor:pointer;" onclick="openOpModal('${op.id}')">
+          <div style="font-family:var(--cond);font-size:16px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.08em">${op.label}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.6">${op.description}</div>
+          <div style="margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--accent2);letter-spacing:.1em">▶ ENTSCHEIDUNG ERFORDERLICH</div>
+        </div>`;
+    }
+  }
+
+  if (!list.innerHTML && !completed.size) {
+    list.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:12px">Keine Operationen verfügbar. Weitere Beweise sichern.</div>';
+  }
+}
+
+let currentOpId = null;
+function openOpModal(opId) {
+  const op = engine.data.operationChoices.find(c => c.id === opId);
+  if (!op) return;
+  currentOpId = opId;
+  document.getElementById('op-modal-title').textContent = op.label;
+  document.getElementById('op-modal-desc').textContent = op.description;
+  const opts = document.getElementById('op-modal-options');
+  opts.innerHTML = '';
+  for (const opt of op.options) {
+    opts.innerHTML += `
+      <div class="op-option" onclick="executeOp('${opId}','${opt.id}')">
+        <h4>${opt.label}</h4>
+        <p>${opt.description}</p>
+      </div>`;
+  }
+  document.getElementById('op-modal').classList.add('show');
+}
+
+function executeOp(opId, optId) {
+  engine.chooseOp(opId, optId);
+  document.getElementById('op-modal').classList.remove('show');
+  renderWall();
+  updatePhaseUI();
+  checkConflicts();
+  const opt = engine.data.operationChoices.find(c=>c.id===opId)?.options.find(o=>o.id===optId);
+  notify(`Operation: ${opt?.label||optId}`, 'warn');
+
+  // Check if new ops available
+  const pending = engine.data.operationChoices.filter(op =>
+    op.phase <= engine.phase && !engine.opChoices.find(c => c.choiceId === op.id)
+  );
+  if (pending.length > 0) {
+    document.querySelector('[data-tab="ops"]').classList.add('has-update');
+  }
+}
+
+function checkOperations() {
+  if (!engine) return;
+  const pending = engine.data.operationChoices.filter(op =>
+    op.phase <= engine.phase && !engine.opChoices.find(c => c.choiceId === op.id)
+  );
+  document.querySelector('[data-tab="ops"]').classList.toggle('has-update', pending.length > 0);
+}
+
+// ── VERDICT ───────────────────────────────────────────────────────────────────
+
+function renderVerdictForm() {
+  if (!engine) return;
+  const form = document.getElementById('verdict-form');
+  const fields = engine.data.verdictFields;
+  let html = '';
+  for (const [key, def] of Object.entries(fields)) {
+    html += `
+      <div class="verdict-field">
+        <label>${key.replace(/_/g,' ').toUpperCase()}</label>
+        <input type="text" id="vf-${key}" placeholder="Ihre Einschätzung..." autocomplete="off">
+        <div class="verdict-hint">${def.hint}</div>
+      </div>`;
+  }
+  html += `
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:8px;">
+      <button class="btn-primary" onclick="submitVerdict()">▶ Urteil abgeben</button>
+    </div>
+    <div style="font-size:11px;color:var(--red);margin-top:8px;font-family:var(--mono);">
+      WARNUNG: Das Urteil ist endgültig und kann nicht rückgängig gemacht werden.
+    </div>`;
+  form.innerHTML = html;
+}
+
+function submitVerdict() {
+  if (!engine) return;
+  const verdict = {};
+  for (const key of Object.keys(engine.data.verdictFields)) {
+    const el = document.getElementById('vf-'+key);
+    if (el) verdict[key] = el.value;
+  }
+  const result = engine.submitVerdict(verdict);
+  showEnding(result);
+}
+
+// ── ENDING ────────────────────────────────────────────────────────────────────
+
+function showEnding(result) {
+  const screen = document.getElementById('ending-screen');
+  const {ending, score, verdictFlags} = result;
+
+  document.getElementById('ending-title').textContent = ending.label;
+  document.getElementById('ending-score-num').textContent = score.score;
+  document.getElementById('ending-narrative').innerHTML = ending.narrative;
+
+  const bd = document.getElementById('verdict-breakdown');
+  bd.innerHTML = '';
+  for (const [key, res] of Object.entries(verdictFlags)) {
+    bd.innerHTML += `
+      <div class="vb-item ${res.correct?'correct':'wrong'}">
+        <span class="vb-key">${key.replace(/_/g,' ')}</span>
+        <span>${res.correct?'✓ Korrekt':'✗ Falsch'}</span>
+        ${!res.correct&&res.hint?`<span style="color:var(--muted);font-size:10px">${res.hint}</span>`:''}
+      </div>`;
+  }
+
+  screen.classList.add('show');
+}
+
+function showResolution() {
+  if (!engine) return;
+  const ending = engine.endings.evaluate();
+  const key = ending.id === 'full_truth' ? 'full' : ending.id.includes('muller') ? 'miss_westermann' : 'wrong_szabo';
+  const res = FALL_1.resolution?.[key] || FALL_1.resolution?.full || ending.narrative;
+  document.getElementById('ending-narrative').innerHTML = res;
+}
+
+function restartCase() {
+  document.getElementById('ending-screen').classList.remove('show');
+  engine = new CaseEngine(FALL_1);
+  renderWall();
+  updatePhaseUI();
+  switchTab('briefing');
+}
+
+// ── PHASE UI ──────────────────────────────────────────────────────────────────
+
+function updatePhaseUI() {
+  if (!engine) return;
+  const phase = engine.phase;
+  const ind = document.getElementById('phase-indicator');
+  ind.textContent = PHASE_LABELS[phase] || 'PHASE '+phase;
+  ind.className = `phase-${phase}`;
+
+  // Update wall badge when new nodes available
+  const unrevealedUnlocked = [...engine.nodes.values()].filter(n=>!n.revealed&&!n.locked).length;
+  document.querySelector('[data-tab="wall"]').classList.toggle('has-update', unrevealedUnlocked > 0);
+  document.querySelector('[data-tab="dossier"]').classList.toggle('has-update', engine.flags.flags.size > 4);
+}
+
+// ── CONFLICTS ─────────────────────────────────────────────────────────────────
+
+function checkConflicts() {
+  if (!engine) return;
+  const hasConflict = engine.hasConflicts();
+  document.getElementById('conflict-banner').classList.toggle('show', hasConflict);
+}
+
+function openConflictResolver() {
+  if (!engine) return;
+  const conflicts = engine.getConflicts();
+  if (!conflicts.length) return;
+  const c = conflicts[0];
+  const msg = `Konflikt in Flag "${c.id}":\nWert A: ${c.existing} (aktuell)\nWert B: ${c.value} (Quelle: ${c.source})\n\nWelchem Wert vertrauen Sie?\n[A] ${c.existing}\n[B] ${c.value}`;
+  // Simple confirm dialog
+  const choice = confirm(`Konflikt: Flag "${c.id}"\n\nA: ${c.existing}\nB: ${c.value}\n\nOK = A wählen, Abbrechen = B wählen`);
+  engine.flags.resolveConflict(c.id, choice ? c.existing : c.value);
+  engine.flags.conflictLog = engine.flags.conflictLog.filter(x=>x!==c);
+  checkConflicts();
+  notify(`Konflikt aufgelöst: ${c.id} = ${choice?c.existing:c.value}`, 'success');
+  renderWall();
+  updatePhaseUI();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+
+const TRUST_META = {
+  A:{label:'Physisch gesichert',color:'#4ade80'},
+  B:{label:'Glaubwürdig',color:'#a3e635'},
+  C:{label:'Interpretierbar',color:'#facc15'},
+  D:{label:'Zeugenaussage',color:'#fb923c'},
+  E:{label:'Fraglich',color:'#f87171'},
+  F:{label:'Desinformation',color:'#9f1239'},
+};
+function getTrustLabel(t) { return TRUST_META[t]?.label || t; }
+
+let notifTimer = null;
+function notify(msg, type='info') {
+  const el = document.getElementById('notification');
+  el.textContent = msg;
+  el.className = 'show type-' + type;
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => { el.classList.remove('show'); }, 2800);
+}
+
+// ── PWA SERVICE WORKER ────────────────────────────────────────────────────────
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+
+// ── WALL PAN ──────────────────────────────────────────────────────────────────
+
+(function setupWallPan() {
+  const wrap = document.getElementById('wall-canvas-wrap');
+  let panStart = null, panOrigin = null;
+  wrap.addEventListener('pointerdown', (e) => {
+    if (e.target !== wrap && !e.target.closest('#wall-canvas-wrap > svg')) return;
+    panStart = {x:e.clientX,y:e.clientY};
+    panOrigin = {x:wallTransform.x,y:wallTransform.y};
+    wrap.classList.add('dragging');
+  });
+  window.addEventListener('pointermove', (e) => {
+    if (!panStart) return;
+    const dx=e.clientX-panStart.x, dy=e.clientY-panStart.y;
+    wallTransform.x = panOrigin.x+dx;
+    wallTransform.y = panOrigin.y+dy;
+    if (engine) {
+      for (const [id, node] of engine.nodes) {
+        if (!node.revealed) continue;
+        const el = document.getElementById('node-'+id);
+        if (el) { el.style.left=(node.x+wallTransform.x)+'px'; el.style.top=(node.y+wallTransform.y)+'px'; }
+      }
+      redrawLinks();
+    }
+  });
+  window.addEventListener('pointerup', () => { panStart=null; wrap.classList.remove('dragging'); });
+})();
+
+// ── INIT ──────────────────────────────────────────────────────────────────────
+window.addEventListener('DOMContentLoaded', init);
+</script>
 </body>
 </html>
